@@ -1,4 +1,4 @@
 # graysonewcomer.github.io
 My website
 
-link test [link](https://graysonewcomer.github.io)
+View my portfolio [here](https://graysonewcomer.github.io)
