@@ -1,4 +1,4 @@
 # graysonewcomer.github.io
 My website
 
-link test !(graysonewcomer.github.io)
+link test [link](https://graysonewcomer.github.io)
