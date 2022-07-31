@@ -1,6 +1,6 @@
 import './style.css';
 
-import * as THREE from '/Users/grays/VSCode/Git/graysonewcomer.github.io/node_modules/three/build/three';
+import * as THREE from '/graysonewcomer.github.io/node_modules/three/build/three';
 
 
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
