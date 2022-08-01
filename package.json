@@ -5,12 +5,26 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
     "vite": "^3.0.0"
   },
   "dependencies": {
+    "gh-pages": "^4.0.0",
     "three": "^0.143.0"
-  }
+  },
+  "description": "My website",
+  "main": "vite.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graysonewcomer/graysonewcomer.github.io.git"
+  },
+  "author": "Grayson Newcomer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/graysonewcomer/graysonewcomer.github.io/issues"
+  },
+  "homepage": "https://github.com/graysonewcomer/graysonewcomer.github.io#readme"
 }
