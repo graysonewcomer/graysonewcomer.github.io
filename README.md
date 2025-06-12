@@ -1,4 +1,4 @@
-# Grayson Ewcomer - Personal Portfolio Website
+# Grayson Newcomer - Personal Portfolio Website
 
 This is a personal portfolio website built with React, showcasing my skills, experience, and projects as a software engineer.
 
