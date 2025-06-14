@@ -183,17 +183,16 @@ const Experience = () => {
               <FaBriefcase />
             </TimelineMarker>
             <TimelineContent>
-              <TimelineDate>2022 - Present</TimelineDate>
-              <TimelineTitle>Senior Software Engineer</TimelineTitle>
-              <TimelineSubtitle>Tech Innovations Inc.</TimelineSubtitle>
+              <TimelineDate>Aug 2024 - Present</TimelineDate>
+              <TimelineTitle>Software Development Engineer I</TimelineTitle>
+              <TimelineSubtitle>Amazon</TimelineSubtitle>
               <TimelineDescription>
-                Leading the development of cloud-based enterprise solutions, focusing on scalability 
-                and performance optimization. Mentoring junior developers and implementing best practices 
-                across projects.
+                Implementing best practices in development as knowledge increases
+              on various cloud technologies and development methodologies.
               </TimelineDescription>
               <SkillsList position="left">
                 <SkillTag>React</SkillTag>
-                <SkillTag>Node.js</SkillTag>
+                <SkillTag>Java</SkillTag>
                 <SkillTag>AWS</SkillTag>
                 <SkillTag>Microservices</SkillTag>
               </SkillsList>
@@ -205,41 +204,18 @@ const Experience = () => {
               <FaBriefcase />
             </TimelineMarker>
             <TimelineContent>
-              <TimelineDate>2019 - 2022</TimelineDate>
-              <TimelineTitle>Software Engineer</TimelineTitle>
+              <TimelineDate>May 2023 - Aug 2023</TimelineDate>
+              <TimelineTitle>Software Development Engineer Intern</TimelineTitle>
               <TimelineSubtitle>Digital Solutions Co.</TimelineSubtitle>
               <TimelineDescription>
-                Developed and maintained web applications for clients across various industries. 
-                Implemented responsive designs and optimized application performance, resulting in 
-                a 40% improvement in load times.
+                Developed a tool to automate a workflow across several cloud-based
+              tools for smoother processes when working with vendors.
               </TimelineDescription>
               <SkillsList position="right">
-                <SkillTag>JavaScript</SkillTag>
                 <SkillTag>React</SkillTag>
-                <SkillTag>MongoDB</SkillTag>
-                <SkillTag>Express</SkillTag>
-              </SkillsList>
-            </TimelineContent>
-          </TimelineItem>
-          
-          <TimelineItem position="left">
-            <TimelineMarker position="left">
-              <FaBriefcase />
-            </TimelineMarker>
-            <TimelineContent>
-              <TimelineDate>2017 - 2019</TimelineDate>
-              <TimelineTitle>Junior Developer</TimelineTitle>
-              <TimelineSubtitle>WebTech Startup</TimelineSubtitle>
-              <TimelineDescription>
-                Collaborated with the development team on front-end implementation using HTML, CSS, 
-                and JavaScript. Participated in all stages of the development lifecycle, from initial 
-                concept to deployment.
-              </TimelineDescription>
-              <SkillsList position="left">
-                <SkillTag>HTML5</SkillTag>
-                <SkillTag>CSS3</SkillTag>
-                <SkillTag>JavaScript</SkillTag>
-                <SkillTag>jQuery</SkillTag>
+                <SkillTag>Java</SkillTag>
+                <SkillTag>AWS</SkillTag>
+                <SkillTag>Microservices</SkillTag>
               </SkillsList>
             </TimelineContent>
           </TimelineItem>
