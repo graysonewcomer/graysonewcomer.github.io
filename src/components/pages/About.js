@@ -171,7 +171,7 @@ const About = () => {
       
       <AboutSection>
         <ProfileImage>
-          <img src="/MeNJBeach.jpg/350x350" alt="Grayson Newcomer" />
+          <img src="/MeNJBeach.jpg" alt="Grayson Newcomer" />
         </ProfileImage>
         
         <AboutContent>
