@@ -171,7 +171,7 @@ const About = () => {
       
       <AboutSection>
         <ProfileImage>
-          <img src="https://via.placeholder.com/350x350" alt="Grayson Newcomer" />
+          <img src="https://drive.google.com/file/d/1UiNqwqZW7YPvDC21xZQVPKCE_smVJmc4/view?usp=sharing/350x350" alt="Grayson Newcomer" />
         </ProfileImage>
         
         <AboutContent>
