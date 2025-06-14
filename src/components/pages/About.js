@@ -198,7 +198,7 @@ const About = () => {
             with new recipes in the kitchen. I'm also an avid learner, always exploring new technologies and concepts.
           </p>
           
-          <ResumeButton href="/resume.pdf" target="_blank" rel="noopener noreferrer">
+          <ResumeButton href="/Grayson_Newcomer_2024cr.pdf" target="_blank" rel="noopener noreferrer">
             <FaDownload /> Download Resume
           </ResumeButton>
         </AboutContent>
