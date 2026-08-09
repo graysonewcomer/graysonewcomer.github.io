@@ -69,7 +69,7 @@ export const CONTACT = {
   email: 'grayson.newcomer@gmail.com',
   links: [
     { label: 'GitHub', href: 'https://github.com/graysonewcomer' },
-    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/graysonnewcomer' },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/grayson-newcomer' },
     { label: 'Résumé', href: '/Grayson_Newcomer_Resume2026.pdf' },
   ],
 };
