@@ -7,16 +7,12 @@ import { isMobile } from '../lib/device';
 import { textPoints, spherePoints, clusterPoints, geodesicPoints, shellPoints } from './shapes';
 
 /**
- * The cloud.
+ * The cloud. One THREE.Points object — a single draw call however many
+ * particles. Each frame, every particle lerps between the two shapes flanking
+ * the current section and writes into the position buffer.
  *
- * One THREE.Points object — a single draw call no matter how many particles.
- * The morph runs in plain JS in useFrame: for each particle, lerp between the
- * two shapes flanking the current section and write into the position buffer.
- *
- * Measured at ~1.8ms/frame for 25k particles on desktop — about 11% of a 60fps
- * budget. That's the real cost of doing this on the CPU, and it buys you code
- * you can read and debug. If it ever needs to be free, this exact loop is what
- * moves into a vertex shader; the shapes and stagger logic carry over unchanged.
+ * ~1.8ms/frame for 25k on desktop. The CPU-vs-shader tradeoff is in
+ * docs/DECISIONS.md.
  */
 
 const COUNT_DESKTOP = 25000;
@@ -58,15 +54,10 @@ export function ParticleCloud({ reducedMotion }) {
     for (let i = 0; i < count; i++) {
       seeds[i] = Math.random();
 
-      // 60/30/10 applied to particles: green carries it, purple gives the mass
-      // something to sit in, blue and pink are punctuation you notice only when
-      // you look for them.
-      //
-      // The `boost` is not decoration. Bloom selects by *luminance*, and these
-      // hues are nowhere near equal: in linear space green reads 0.553 but pink
-      // only 0.346 — below the bloom threshold at any brightness. Left alone,
-      // the rarest accent would be the one thing that never glows. Boosting the
-      // accents puts them above the threshold so they behave like sparks.
+      // 60/30/10: green carries it, purple gives the mass something to sit in,
+      // blue and pink are punctuation. The accent `boost` is required, not
+      // decorative — bloom selects on luminance and pink sits under the
+      // threshold at any brightness without it. See docs/DECISIONS.md.
       const r = Math.random();
       let boost = 1;
       if (r < 0.06) { c.copy(pink); boost = 1.5; }
@@ -98,9 +89,8 @@ export function ParticleCloud({ reducedMotion }) {
     for (let i = 0; i < count; i++) {
       const s = seeds[i];
 
-      // Per-particle stagger. Without this every point moves in lockstep and the
-      // whole thing looks like one rigid object being tweened. With it, the
-      // cloud appears to *decide* to become the next shape.
+      // Per-particle stagger. In lockstep it reads as one rigid object being
+      // tweened; staggered, the cloud appears to *decide* to become the next shape.
       const t0 = (local - s * MAX_DELAY) / TRAVEL;
       const t = t0 <= 0 ? 0 : t0 >= 1 ? 1 : t0 * t0 * (3 - 2 * t0); // clamp + smoothstep
 
@@ -130,11 +120,9 @@ export function ParticleCloud({ reducedMotion }) {
 
     geo.attributes.position.needsUpdate = true;
 
-    // Yaw driven by scroll, plus a slow *oscillation* — deliberately not a
-    // continuous spin. `time * 0.04` accumulates without bound, so after about
-    // 78 seconds the cloud had turned a full half-turn and the hero name was
-    // rendering mirrored. Anything that must stay readable can't sit on a
-    // monotonic rotation.
+    // Yaw driven by scroll, plus a slow oscillation. Deliberately not a
+    // continuous spin — an accumulating rotation eventually renders the hero
+    // name mirrored. Nothing readable sits on a monotonic rotation.
     points.current.rotation.y =
       scroll.current * 0.9 + (reducedMotion ? 0 : Math.sin(time * 0.12) * 0.09);
   });
@@ -151,8 +139,7 @@ export function ParticleCloud({ reducedMotion }) {
         vertexColors
         transparent
         opacity={0.95}
-        // Additive blending is what makes overlapping particles glow where the
-        // cloud is dense. depthWrite off stops them z-fighting each other.
+        // Additive makes dense regions glow; depthWrite off stops z-fighting.
         blending={THREE.AdditiveBlending}
         depthWrite={false}
       />

@@ -7,19 +7,9 @@ import { palette } from '../lib/theme';
 /**
  * A wireframe core that grows in over the back half of the page.
  *
- * This replaced a refractive glass crystal, twice over:
- *
- * 1. MeshTransmissionMaterial renders the scene into its own buffer each frame.
- *    Under an EffectComposer that buffer catches the already-bloomed output, so
- *    every frame refracts the last one's glow — a white orb that got worse the
- *    further you scrolled. Compounding, not merely bright.
- * 2. Swapping to polished metal fixed the blow-out but read as a dark blob
- *    punched out of the particle field. Solid geometry occludes; the whole
- *    appeal of this scene is that you can see through it.
- *
- * Wireframe + additive blending solves both. It adds light instead of blocking
- * it, so the cloud reads straight through the edges, and it's made of the same
- * glowing lines as everything else on the page.
+ * Wireframe + additive on purpose: it adds light instead of blocking it, so the
+ * cloud reads straight through. Solid or refractive materials were both tried
+ * here and both failed — docs/DECISIONS.md before swapping this for a mesh.
  */
 
 /** Page scroll range over which the core scales in. */
@@ -59,9 +49,9 @@ export function WireCore({ reducedMotion }) {
           color={palette.green}
           wireframe
           transparent
-          // Kept low: additive blending means every edge crossing another sums,
-          // and the vertices of an icosahedron are exactly where many edges
-          // meet. High opacity here is how you get white-hot knots.
+          // Low on purpose: additive means every edge crossing sums, and an
+          // icosahedron's vertices are where many edges meet. Raise this and
+          // you get white-hot knots.
           opacity={0.22}
           blending={THREE.AdditiveBlending}
           depthWrite={false}

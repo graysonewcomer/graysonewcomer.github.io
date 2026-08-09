@@ -10,15 +10,11 @@ export default defineConfig({
   server: { port: Number(process.env.PORT) || 5173 },
 
   resolve: {
-    // drei depends on stats-gl, which pins three@0.170 — npm installs it nested,
-    // so the dev graph ends up with two copies of three and the console warns
-    // "Multiple instances of Three.js being imported". Two copies means two sets
-    // of classes, so `instanceof THREE.Material` can be false for an object that
-    // very much is one, and the failures are subtle and awful to chase.
-    // Deduping forces every importer onto the root three@0.185.
+    // Required: drei pulls stats-gl, which pins an older three and gets
+    // installed nested. Two copies of three means two sets of classes and
+    // `instanceof` checks that fail on objects that very much do match.
     dedupe: ['three'],
   },
 
-  // `base` stays '/' — correct for a username.github.io *user* page.
-  // A project page (github.com/user/repo -> /repo/) would need base: '/repo/'.
+  // `base` stays '/' — this is a username.github.io *user* page.
 })

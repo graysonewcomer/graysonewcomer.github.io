@@ -3,10 +3,8 @@ import * as THREE from 'three';
 /**
  * Point-cloud shape generators.
  *
- * Every generator returns a Float32Array of exactly `count * 3` values. That
- * matters more than it looks: particle `i` must exist in every shape, because
- * the morph is just `lerp(shapeA[i], shapeB[i])`. If the counts differed, points
- * would pop in and out instead of travelling.
+ * Every generator returns exactly `count * 3` floats — particle `i` must exist
+ * in every shape, because the morph is `lerp(shapeA[i], shapeB[i])`.
  */
 
 /** Force any list of Vector3-ish triples to exactly `count` points. */
@@ -15,8 +13,7 @@ function resample(src, count) {
   const n = src.length / 3;
   if (n === 0) return out;
   for (let i = 0; i < count; i++) {
-    // Deterministic stride so the same input always maps the same way, with a
-    // wrap for when we need more points than we sampled.
+    // Deterministic stride, wrapping when we need more points than we sampled.
     const j = (i % n) * 3;
     out[i * 3] = src[j];
     out[i * 3 + 1] = src[j + 1];
@@ -26,11 +23,8 @@ function resample(src, count) {
 }
 
 /**
- * Text → points, via a 2D canvas.
- *
- * Draw the string, read the pixels back, keep the opaque ones. No shaders, no
- * font geometry, no typeface.json. This is the cheapest trick in the file and
- * it's the one that makes the site yours.
+ * Text → points, via a 2D canvas: draw the string, read the pixels back, keep
+ * the opaque ones. No font geometry, no typeface.json.
  */
 export function textPoints(text, count, { width = 6.5, fontSize = 240 } = {}) {
   const cv = document.createElement('canvas');
@@ -45,16 +39,13 @@ export function textPoints(text, count, { width = 6.5, fontSize = 240 } = {}) {
   ctx.fillText(text, cv.width / 2, cv.height / 2);
 
   const { data } = ctx.getImageData(0, 0, cv.width, cv.height);
-  // Every pixel. Costs ~10ms once at startup and yields ~70k candidate points,
-  // comfortably more than the particle count — so after the shuffle below, each
-  // particle gets its own distinct position instead of stacking on duplicates.
+  // Every pixel: ~10ms once at startup for ~70k candidates, comfortably more
+  // than the particle count, so no two particles land on the same position.
   const step = 1;
 
-  // First pass: collect hit pixels and their bounding box. Scaling against the
-  // canvas instead of the glyphs would make the result depend on canvas size,
-  // font metrics and string length — "GRAYSON" came out half the intended size
-  // that way. Normalising to the real ink bounds makes `width` mean what it says
-  // for any string.
+  // Collect hit pixels and their bounding box. Normalising to the ink bounds
+  // rather than the canvas is what makes `width` mean the same thing for any
+  // string — see docs/DECISIONS.md.
   const px = [];
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (let y = 0; y < cv.height; y += step) {
@@ -76,8 +67,7 @@ export function textPoints(text, count, { width = 6.5, fontSize = 240 } = {}) {
 
   const hits = [];
   for (let i = 0; i < px.length; i += 2) {
-    // Sub-pixel jitter breaks up the pixel grid — without it the glyphs read as
-    // a screen-door lattice rather than a cloud.
+    // Sub-pixel jitter, or the glyphs read as a screen-door lattice.
     hits.push(
       (px[i] - cx + Math.random() - 0.5) * scale,
       -(px[i + 1] - cy + Math.random() - 0.5) * scale,
@@ -85,8 +75,7 @@ export function textPoints(text, count, { width = 6.5, fontSize = 240 } = {}) {
     );
   }
 
-  // Shuffle so resample()'s stride doesn't carve visible scanlines out of the
-  // glyphs when we have fewer particles than sampled pixels.
+  // Shuffle, or resample()'s stride carves scanlines out of the glyphs.
   const tri = hits.length / 3;
   for (let i = tri - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -115,7 +104,7 @@ export function spherePoints(count, radius = 2.3) {
   return out;
 }
 
-/** Gaussian blobs scattered on a ring — reads as a constellation / node graph. */
+/** Gaussian blobs on a ring — reads as a constellation / node graph. */
 export function clusterPoints(count, clusters = 9, spread = 3.4) {
   const out = new Float32Array(count * 3);
   const centers = [];
@@ -129,8 +118,7 @@ export function clusterPoints(count, clusters = 9, spread = 3.4) {
   }
   for (let i = 0; i < count; i++) {
     const [cx, cy, cz] = centers[i % clusters];
-    // Box-Muller-ish: summing uniforms approximates a gaussian, which gives
-    // dense cores and sparse edges instead of uniform blobs.
+    // Summed uniforms approximate a gaussian: dense cores, sparse edges.
     const g = () => (Math.random() + Math.random() + Math.random() - 1.5) * 0.5;
     out[i * 3] = cx + g();
     out[i * 3 + 1] = cy + g();
@@ -140,23 +128,15 @@ export function clusterPoints(count, clusters = 9, spread = 3.4) {
 }
 
 /**
- * Geodesic dome — points along the strut lattice of a subdivided icosahedron.
- *
- * Deliberately the *edges*, not the surface. Sampling the surface of a sphere-ish
- * solid just gives you another sphere, and section 2 is already a sphere; the
- * lattice is what makes it read as a built structure. (It replaced a torus knot,
- * which during the morph resolved into a shape nobody could unsee.)
- *
- * `detail: 1` — 80 faces, 120 unique edges. Tried 2 (480 edges) first and it
- * collapsed into a fuzzy ball: spreading 25k points over four times the strut
- * length leaves each one too thin to read against bloom. Fewer, denser struts
- * is the version you can actually see.
+ * Geodesic dome — points along the strut *edges* of a subdivided icosahedron,
+ * not its surface. `detail: 1` is 80 faces / 120 edges; raising it thins each
+ * strut until the whole thing reads as a fuzzy ball.
  */
 export function geodesicPoints(count, radius = 2.4, detail = 1) {
   const geo = new THREE.IcosahedronGeometry(radius, detail);
   // PolyhedronGeometry emits non-indexed triangles, so every 9 floats is a face
-  // and shared edges appear once per adjoining face. Dedupe on a rounded key or
-  // half the struts come out twice as dense as the other half.
+  // and a shared edge appears once per adjoining face. Dedupe or half the struts
+  // come out twice as dense as the other half.
   const pos = geo.attributes.position.array;
   const edges = [];
   const seen = new Set();
@@ -177,8 +157,8 @@ export function geodesicPoints(count, radius = 2.4, detail = 1) {
   }
 
   const out = new Float32Array(count * 3);
-  // A slice of the budget piles onto the vertices so the nodes read as joints
-  // rather than as places where two struts happen to cross.
+  // A slice of the budget piles onto the vertices so they read as joints rather
+  // than as places where struts happen to cross.
   const nodeShare = 0.16;
 
   for (let i = 0; i < count; i++) {
@@ -190,7 +170,7 @@ export function geodesicPoints(count, radius = 2.4, detail = 1) {
     } else {
       t = Math.random();
     }
-    // Thin gaussian cross-section, so a strut is a filament and not a wire.
+    // Thin gaussian cross-section: a strut should be a filament, not a wire.
     const j = () => (Math.random() + Math.random() + Math.random() - 1.5) * 0.03;
     out[i * 3] = ax + (bx - ax) * t + j();
     out[i * 3 + 1] = ay + (by - ay) * t + j();

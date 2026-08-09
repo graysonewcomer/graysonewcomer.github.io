@@ -1,17 +1,9 @@
 /**
- * All copy lives here.
+ * All copy lives here — nothing user-facing is hardcoded in a component.
  *
- * Ported from the old React site (About.js / Experience.js / Skills.js /
- * Home.js / Contact.js), with the generated filler rewritten and the
- * unverifiable parts flagged rather than repeated.
- *
- * Resolved:
- *  - "Digital Solutions Co." was generated filler. The 2023 internship was
- *    Amazon, Direct Fulfillment — Inventory Team. Verified against the résumé.
- *  - The old Skills page had proficiency percentages (React 95, TypeScript 90,
- *    Redux 20, Docker 20). Those were invented and some contradicted each other.
- *    Dropped — a bare list claims less and survives scrutiny better.
- *  - Résumé link now points at the 2026 PDF, not the 2024 one.
+ * Everything in this file is verified against the résumé. The old site it was
+ * ported from contained generated filler, so it is not a source for anything
+ * factual; check new claims against the PDF in public/.
  */
 
 export const HERO = {

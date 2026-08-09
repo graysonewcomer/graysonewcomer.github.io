@@ -2,9 +2,9 @@ import { Scene } from './scene/Scene';
 import { HERO, ABOUT, STACK, WORK, PROJECTS, CONTACT } from './content';
 
 /**
- * Content column sits left; the particle cloud is offset right (see Rig.jsx) so
- * the two never fight for the same pixels. The one exception is the hero, where
- * the cloud spells the name and the DOM deliberately stays out of its way.
+ * Content column sits left; the cloud is offset right (see Rig.jsx) so the two
+ * never fight for the same pixels. The hero is the exception — there the cloud
+ * spells the name and the DOM stays out of its way.
  */
 export default function App() {
   return (
@@ -15,11 +15,8 @@ export default function App() {
         <section id="intro" className="intro">
           <div className="col">
             {/*
-              No <h1> with the name here on purpose. The particles spell GRAYSON
-              across the middle of the screen — printing it again in the DOM put
-              two copies of his name on top of each other.
-              The h1 is visually hidden so screen readers and search engines
-              still get a real page heading.
+              Hidden, not absent: the particles already spell the name on screen,
+              but the page still needs a real <h1> for screen readers and search.
             */}
             <h1 className="sr-only">{HERO.name}</h1>
             <span className="label">00 / hello</span>

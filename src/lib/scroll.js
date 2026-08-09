@@ -1,16 +1,12 @@
 /**
- * The scroll signal.
+ * The scroll signal. Deliberately not React state — the render loop reads this
+ * object directly and React never learns it changed.
  *
- * This is deliberately NOT React state. If scroll position lived in useState,
- * every frame of scrolling would re-render the component tree. Instead this is a
- * plain mutable object that the render loop reads directly — React never knows
- * it changed, and the 3D scene reads it 60+ times a second for free.
+ * `target`  = where the page actually is (0 at top, 1 at bottom)
+ * `current` = a damped follower that lags slightly behind
  *
- * `target`  = where the page actually is right now (0 at top, 1 at bottom)
- * `current` = a damped follower that lags slightly behind `target`
- *
- * Everything visual should read `current`, never `target`. The lag is what makes
- * motion feel weighted instead of glued to the scrollbar.
+ * Visuals read `current`, never `target`. The lag is what makes motion feel
+ * weighted instead of glued to the scrollbar.
  */
 export const scroll = {
   target: 0,
@@ -44,13 +40,11 @@ export function initScroll() {
 /**
  * Advance the damped follower. Call once per frame, before anything reads it.
  *
- * The `1 - exp(-k * dt)` form (instead of a flat `lerp(a, b, 0.1)`) makes the
- * damping frame-rate independent — it settles at the same speed on a 60Hz laptop
- * and a 144Hz monitor. A flat lerp moves twice as fast at double the frame rate.
+ * `1 - exp(-k * dt)` rather than a flat lerp so the damping is frame-rate
+ * independent — same settling speed on a 60Hz laptop and a 144Hz monitor.
  */
 export function updateScroll(delta) {
-  // A backgrounded tab can hand back a huge delta on return. Clamp it or the
-  // follower teleports.
+  // A backgrounded tab hands back a huge delta on return. Clamp or it teleports.
   const dt = Math.min(delta, 0.1);
   const prev = scroll.current;
 
@@ -61,11 +55,8 @@ export function updateScroll(delta) {
 }
 
 /**
- * Split the global 0..1 into per-section progress.
- *
- * With 4 sections you get index 0..3 plus `local`, a 0..1 ramp within the
- * current section. Phase 2 uses exactly this to decide which two shapes the
- * particles are morphing between and how far along that morph is.
+ * Split the global 0..1 into per-section progress: `index` picks the pair of
+ * shapes currently morphing, `local` is a 0..1 ramp across that morph.
  */
 export function sectionProgress(count) {
   const scaled = scroll.current * (count - 1);
