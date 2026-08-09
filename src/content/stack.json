@@ -1,0 +1,6 @@
+[
+  { "group": "Languages", "items": ["JavaScript", "TypeScript", "Java", "Python"] },
+  { "group": "Frontend", "items": ["React", "three.js", "HTML / CSS"] },
+  { "group": "Backend", "items": ["Node.js", "REST APIs", "PostgreSQL", "MongoDB"] },
+  { "group": "Infra", "items": ["AWS", "Docker", "Microservices", "Git"] }
+]

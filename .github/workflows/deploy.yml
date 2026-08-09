@@ -1,0 +1,45 @@
+name: Build and deploy
+
+# Any push to main rebuilds and publishes — including a one-word edit made in
+# the github.com file editor, which is the point. If the build fails (malformed
+# JSON is the likely cause) nothing is published and the live site keeps serving
+# the previous version.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Needed to push the built output to the gh-pages branch.
+permissions:
+  contents: write
+
+# A second push while one is mid-deploy cancels the older run rather than
+# racing it onto gh-pages.
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+      # Publishes dist/ to the gh-pages branch, which is the branch GitHub Pages
+      # serves for this repo. Same destination as a local `npm run deploy`, so
+      # the two can't disagree about how the site gets published.
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          # dist/ is a fresh build every time; no history worth keeping.
+          force_orphan: true

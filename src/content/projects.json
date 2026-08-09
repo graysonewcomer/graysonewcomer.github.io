@@ -1,0 +1,12 @@
+[
+  {
+    "name": "SyntaxWordle",
+    "note": "Wordle, but for programming languages. You get a code snippet; you name the language. Harder than it sounds once the syntax starts rhyming.",
+    "tags": ["React", "Game logic"]
+  },
+  {
+    "name": "This site",
+    "note": "25,000 GPU-drawn particles that reassemble into a different shape for each section. No shader code — the morph is plain JS running once a frame.",
+    "tags": ["three.js", "React Three Fiber"]
+  }
+]

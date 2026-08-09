@@ -1,0 +1,16 @@
+[
+  {
+    "when": "Aug 2024 — Present",
+    "what": "Software Development Engineer I",
+    "where": "Amazon",
+    "note": "Building and maintaining cloud services. Java, AWS, microservices, and the operational discipline that comes with running things at scale.",
+    "tags": ["Java", "AWS", "React", "Microservices"]
+  },
+  {
+    "when": "May 2023 — Aug 2023",
+    "what": "Software Development Engineer Intern",
+    "where": "Amazon — Direct Fulfillment, Inventory",
+    "note": "Designed and shipped an ASIN deletion feature spanning DynamoDB and Elasticsearch — React/TypeScript UI plus the backend workflows behind it — resolving data consistency issues that were affecting vendor operations.",
+    "tags": ["React", "TypeScript", "DynamoDB", "Elasticsearch"]
+  }
+]
