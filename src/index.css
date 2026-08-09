@@ -110,38 +110,25 @@ main { position: relative; z-index: 2; }
   transform: scale(1.35);
 }
 
-/* Trace + label branch out of the live node only. Everything else stays a
-   bare dot, or the gutter turns into a second navigation column. */
-.spine-trace,
-.spine-label {
+/*
+  A trace branches out of the live node only — everything else stays a bare dot.
+  Kept short deliberately: the content column starts close to the gutter, and a
+  longer stub ran underneath the copy.
+*/
+.spine-trace {
   position: absolute;
-  left: 22px;
+  left: 20px;
   top: 50%;
+  width: 14px;
+  height: 1px;
+  background: #fff;
   opacity: 0;
+  transform: translateY(-0.5px);
   transition: opacity 0.35s ease;
   pointer-events: none;
 }
 
-.spine-trace {
-  width: 26px;
-  height: 1px;
-  background: #fff;
-  transform: translateY(-0.5px);
-}
-
-.spine-label {
-  left: 54px;
-  transform: translateY(-50%) scale(0.85);
-  transform-origin: left center;
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #fff;
-  white-space: nowrap;
-}
-
-.spine-node[data-state='live'] .spine-trace,
-.spine-node[data-state='live'] .spine-label { opacity: 0.9; }
+.spine-node[data-state='live'] .spine-trace { opacity: 0.9; }
 
 /* No gutter to put it in on a phone. */
 @media (max-width: 900px) {

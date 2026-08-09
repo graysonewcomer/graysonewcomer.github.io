@@ -79,6 +79,9 @@ export function SignalSpine() {
     <div className="spine" aria-hidden="true">
       <span className="spine-rail" />
       <span className="spine-lit" ref={lit} />
+      {/* No label on the node: the section already prints "02 / stack" at the
+          top of its own column, and a second copy in the gutter both duplicated
+          it and overlapped the content. */}
       {SECTIONS.map((s, i) => (
         <a
           key={s.id}
@@ -94,7 +97,6 @@ export function SignalSpine() {
           }}
         >
           <span className="spine-trace" />
-          <span className="spine-label">{s.label}</span>
         </a>
       ))}
     </div>
