@@ -1,0 +1,208 @@
+:root {
+  /* Mirrors src/lib/theme.js — keep them in sync. */
+  --base: #0b0710;
+  --purple: #3b0764;
+  --maroon: #4c0519;
+  --green: #4ade80;
+  --blue: #38bdf8;
+  --pink: #f472b6;
+  --text: #e9e4f0;
+  --text-dim: #8b7fa0;
+
+  color-scheme: dark;
+  font-family: 'Roboto Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  color: var(--text);
+  background: var(--base);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--base);
+}
+
+/* Fixed full-viewport canvas layer. Content scrolls over it. */
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  /* Never let the canvas eat clicks or touch-scroll. */
+  pointer-events: none;
+}
+
+/*
+  Scrim. 25k additive particles behind body copy is unreadable — this darkens
+  the left side where the text column lives while leaving the right side, where
+  the cloud is offset to, completely clear.
+*/
+main { position: relative; z-index: 2; }
+
+/*
+  Scrim, per section rather than one fixed overlay.
+  25k additive particles behind body copy is unreadable, so the text sections
+  darken the left column. The hero is deliberately exempt: it has almost no copy
+  and the particles spell the name there — a page-wide fixed scrim washed it out
+  to grey, which was very obvious on mobile where the gradient covers the full
+  width.
+*/
+section:not(.intro)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(11, 7, 16, 0.93) 0%,
+    rgba(11, 7, 16, 0.8) 30%,
+    rgba(11, 7, 16, 0.15) 58%,
+    rgba(11, 7, 16, 0) 75%
+  );
+}
+
+section {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6rem clamp(1.5rem, 6vw, 7rem);
+}
+
+.col { max-width: 46ch; }
+
+/* The hero gives the cloud the middle of the screen and sits underneath it. */
+.intro { justify-content: flex-end; padding-bottom: 5rem; }
+
+.label {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 1.1rem;
+}
+
+.role { font-size: clamp(1rem, 2.6vw, 1.4rem); color: var(--text); margin: 0; }
+.dim { color: var(--text-dim); }
+
+h2 {
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 500;
+  margin: 0 0 1.5rem;
+  line-height: 1.05;
+}
+
+h3 { font-size: 1.05rem; font-weight: 500; margin: 0 0 0.15rem; }
+
+.subhead {
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+p {
+  margin: 0 0 1.1rem;
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+
+.lead { color: var(--text); font-size: 1.02rem; }
+
+/* Stack list ---------------------------------------------------------- */
+.stack { margin: 0; }
+
+.stack-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid rgba(139, 127, 160, 0.18);
+}
+.stack-row:last-child { border-bottom: 1px solid rgba(139, 127, 160, 0.18); }
+
+dt { color: var(--text-dim); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; padding-top: 0.25rem; }
+dd { margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+.chip {
+  font-size: 0.78rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 2px;
+  color: var(--text);
+}
+
+/* Work entries -------------------------------------------------------- */
+.entry {
+  padding: 1.4rem 0;
+  border-top: 1px solid rgba(139, 127, 160, 0.18);
+}
+.entry:first-of-type { border-top: none; padding-top: 0; }
+
+.when { font-size: 0.72rem; letter-spacing: 0.1em; color: var(--green); }
+.where { color: var(--text); font-size: 0.85rem; margin-bottom: 0.8rem; }
+.tags { font-size: 0.72rem; color: var(--text-dim); letter-spacing: 0.08em; margin-bottom: 0; }
+
+/* Contact ------------------------------------------------------------- */
+.mail { color: var(--green); text-decoration: none; border-bottom: 1px solid rgba(74, 222, 128, 0.4); }
+.mail:hover { border-bottom-color: var(--green); }
+
+.links { display: flex; gap: 1.5rem; margin-top: 1.6rem; flex-wrap: wrap; }
+.links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.links a:hover { color: var(--green); border-bottom-color: var(--green); }
+
+.scroll-hint {
+  margin-top: 3rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  color: var(--text-dim);
+  animation: drift 2.6s ease-in-out infinite;
+}
+
+@keyframes drift {
+  0%, 100% { opacity: 0.35; transform: translateY(0); }
+  50%      { opacity: 0.9;  transform: translateY(4px); }
+}
+
+/* Visually hidden but still announced by screen readers. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  /* No "left column" to hide behind on a narrow screen — the cloud sits
+     directly under the text, so the scrim covers the full width. Still only on
+     the content sections, never the hero. */
+  section:not(.intro)::before {
+    background: linear-gradient(
+      180deg,
+      rgba(11, 7, 16, 0.62) 0%,
+      rgba(11, 7, 16, 0.84) 22%,
+      rgba(11, 7, 16, 0.84) 100%
+    );
+  }
+  .stack-row { grid-template-columns: 1fr; gap: 0.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
