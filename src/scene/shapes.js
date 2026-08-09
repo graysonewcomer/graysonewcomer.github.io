@@ -104,25 +104,41 @@ export function spherePoints(count, radius = 2.3) {
   return out;
 }
 
-/** Gaussian blobs on a ring — reads as a constellation / node graph. */
-export function clusterPoints(count, clusters = 9, spread = 3.4) {
+/**
+ * Stacked cylinders — the database-icon silhouette, for the stack section.
+ *
+ * Each tier is a wall plus a top cap, with a gap between tiers so the caps stay
+ * visible. Those cap ellipses are the whole read: without them you get one tall
+ * can, and the "layers" only exist because you can see the seams between them.
+ */
+export function stackPoints(count, { tiers = 4, radius = 2.0, tierH = 0.6, gap = 0.18 } = {}) {
   const out = new Float32Array(count * 3);
-  const centers = [];
-  for (let c = 0; c < clusters; c++) {
-    const a = (c / clusters) * Math.PI * 2;
-    centers.push([
-      Math.cos(a) * spread * (0.55 + Math.random() * 0.45),
-      (Math.random() - 0.5) * 2.6,
-      Math.sin(a) * spread * (0.55 + Math.random() * 0.45),
-    ]);
-  }
+  const total = tiers * tierH + (tiers - 1) * gap;
+  const base = -total / 2;
+  // Enough of the budget on the caps to draw them, not so much that the walls
+  // thin out — the walls are what carry the volume.
+  const capShare = 0.34;
+
   for (let i = 0; i < count; i++) {
-    const [cx, cy, cz] = centers[i % clusters];
-    // Summed uniforms approximate a gaussian: dense cores, sparse edges.
-    const g = () => (Math.random() + Math.random() + Math.random() - 1.5) * 0.5;
-    out[i * 3] = cx + g();
-    out[i * 3 + 1] = cy + g();
-    out[i * 3 + 2] = cz + g();
+    const tier = i % tiers;
+    const bottom = base + tier * (tierH + gap);
+    const a = Math.random() * Math.PI * 2;
+    const jitter = () => (Math.random() - 0.5) * 0.05;
+    let r, y;
+
+    if (Math.random() < capShare) {
+      // Cap: biased outward so the rim stays crisp instead of the disc filling
+      // in solid, which would hide the tier below it.
+      r = radius * (0.5 + 0.5 * Math.sqrt(Math.random()));
+      y = bottom + tierH;
+    } else {
+      r = radius;
+      y = bottom + Math.random() * tierH;
+    }
+
+    out[i * 3] = Math.cos(a) * r + jitter();
+    out[i * 3 + 1] = y + jitter();
+    out[i * 3 + 2] = Math.sin(a) * r + jitter();
   }
   return out;
 }

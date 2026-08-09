@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { scroll, sectionProgress } from '../lib/scroll';
 import { palette } from '../lib/theme';
 import { isMobile } from '../lib/device';
-import { textPoints, spherePoints, clusterPoints, geodesicPoints, shellPoints } from './shapes';
+import { textPoints, spherePoints, stackPoints, geodesicPoints, shellPoints } from './shapes';
 
 /**
  * The cloud. One THREE.Points object — a single draw call however many
@@ -33,7 +33,7 @@ export function ParticleCloud({ reducedMotion }) {
     () => [
       textPoints('GRAYSON', count),
       spherePoints(count),
-      clusterPoints(count),
+      stackPoints(count),
       geodesicPoints(count),
       shellPoints(count),
     ],

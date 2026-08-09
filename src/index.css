@@ -46,8 +46,15 @@ section:not(.intro)::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  /*
+    Exactly 90deg, i.e. no vertical component. Each section paints its own
+    scrim, so any tilt makes the dark edge sit at a different x at the top of
+    one section than at the bottom of the last — a seam that sweeps up the
+    viewport as you scroll and reads as the page flashing darker. A purely
+    horizontal gradient is identical at every y, so the boundaries vanish.
+  */
   background: linear-gradient(
-    100deg,
+    90deg,
     rgba(11, 7, 16, 0.93) 0%,
     rgba(11, 7, 16, 0.8) 30%,
     rgba(11, 7, 16, 0.15) 58%,
@@ -184,14 +191,10 @@ dd { margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
 @media (max-width: 700px) {
   /* No left column on a narrow screen — the cloud sits directly under the text,
-     so the scrim goes full width. Still never the hero. */
+     so the scrim goes full width. Still never the hero. Flat rather than a
+     vertical ramp: per-section ramps don't line up across section boundaries. */
   section:not(.intro)::before {
-    background: linear-gradient(
-      180deg,
-      rgba(11, 7, 16, 0.62) 0%,
-      rgba(11, 7, 16, 0.84) 22%,
-      rgba(11, 7, 16, 0.84) 100%
-    );
+    background: rgba(11, 7, 16, 0.84);
   }
   .stack-row { grid-template-columns: 1fr; gap: 0.5rem; }
 }
