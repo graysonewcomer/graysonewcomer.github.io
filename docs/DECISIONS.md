@@ -85,6 +85,28 @@ vertices are exactly where many edges meet — high opacity gives white-hot knot
 Implemented with rapier, then removed: 892 kB gzipped, and the interactive chips
 read as UI widgets pasted onto a pixel scene rather than part of it.
 
+### The signal spine runs its own rAF, outside Rig's clock
+
+Everything in the scene reads the scroll value from `Rig`'s `useFrame`. The spine
+is DOM, not canvas, so it can't — `useFrame` only exists inside `<Canvas>`. It
+runs a second requestAnimationFrame loop that writes styles onto refs directly.
+Still no React state per frame; a `setState` there would re-render the page on
+every scroll frame, which is the thing `scroll.js` exists to avoid.
+
+It reads `scroll.target` rather than `scroll.current` under reduced motion,
+because the scene switches to an on-demand frameloop then and `current` stops
+advancing.
+
+### Node placement and node activation are separate numbers
+
+A node sits at the scroll fraction where its section is centred. It goes *live*
+when the section's top rises through the upper third of the viewport.
+
+Using one number for both breaks the last section: its midpoint lies past the end
+of the scrollable range, clamps to 1, and `04 / contact` only lit in the final 2%
+of the page. Measured, not guessed — placement fractions came out 0 / 22.8 / 45.7
+/ 72.8 / 100%, and contact never went live until scroll hit exactly 1.
+
 ---
 
 ## Rendering

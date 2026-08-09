@@ -1,0 +1,7 @@
+[
+  { "id": "intro", "label": "00 / hello" },
+  { "id": "about", "label": "01 / about" },
+  { "id": "stack", "label": "02 / stack" },
+  { "id": "work", "label": "03 / work" },
+  { "id": "contact", "label": "04 / contact" }
+]

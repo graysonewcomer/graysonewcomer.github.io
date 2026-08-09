@@ -30,9 +30,13 @@ npm run lint
 `vite.config.js` honours `$PORT`, so a second dev server can start alongside one
 already holding 5173.
 
-All copy lives in `src/content.js` — nothing user-facing is hardcoded in a
-component. `src/lib/theme.js` mirrors the CSS custom properties in
-`src/index.css`; change a colour in one and change it in the other.
+All copy lives in `src/content/*.json`, one file per section — nothing
+user-facing is hardcoded in a component. You can edit those straight from
+github.com and a push to `main` publishes on its own; see [Deploy](#deploy).
+`src/content.js` just re-exports them under the names components import.
+
+`src/lib/theme.js` mirrors the CSS custom properties in `src/index.css`; change
+a colour in one and change it in the other.
 
 Before changing anything in `src/scene/`, read
 [docs/DECISIONS.md](docs/DECISIONS.md). It's the list of things that were tried
@@ -50,16 +54,18 @@ are currently morphing, and how far along.
 
 ```
 App.jsx            content column (left), sections drive page height
-└─ Scene.jsx       <Canvas>, visibility + reduced-motion handling
-   ├─ Rig.jsx      advances scroll, moves the camera, fits + offsets the scene
-   │  ├─ ParticleCloud.jsx   the 25k points and the morph loop
-   │  └─ WireCore.jsx        counter-rotating wireframe cages
-   └─ Effects.jsx  bloom → tone mapping
+├─ Scene.jsx       <Canvas>, visibility + reduced-motion handling
+│  ├─ Rig.jsx      advances scroll, moves the camera, fits + offsets the scene
+│  │  ├─ ParticleCloud.jsx   the 25k points and the morph loop
+│  │  └─ WireCore.jsx        counter-rotating wireframe cages
+│  └─ Effects.jsx  bloom → tone mapping
+└─ ui/SignalSpine.jsx   left-gutter rail that lights up per section (DOM, not canvas)
 
 src/scene/shapes.js   shape generators; each returns exactly count * 3 floats
 src/lib/theme.js      palette, mirrored by index.css
 src/lib/device.js     isMobile, read once at load
-src/content.js        all copy
+src/content/*.json    all copy, one file per section
+src/content.js        re-exports the JSON under the names components import
 ```
 
 **Layout rule:** content column left, cloud offset right (`OFFSET_X` in `Rig`).
@@ -74,14 +80,23 @@ fit the viewport so the name isn't cropped on a portrait phone.
 
 ## Deploy
 
+**Pushing to `main` deploys.** `.github/workflows/deploy.yml` lints, builds and
+publishes `dist/` to the `gh-pages` branch, which is what GitHub Pages serves.
+That includes edits made in the github.com file editor — change a word in
+`src/content/about.json`, commit, and it's live in about a minute. If the build
+fails (malformed JSON being the likely cause) nothing publishes and the site
+keeps serving the last good version.
+
+Never commit to `gh-pages` by hand; it's generated and gets overwritten.
+
+To publish from your machine without pushing:
+
 ```bash
 npm run deploy
 ```
 
-Builds to `dist/` and pushes it to the `gh-pages` branch of
-`graysonewcomer/graysonewcomer.github.io`, which is what GitHub Pages serves.
-`main` holds the source. `base` stays `/` — this is a user page, not a project
-page.
+Same destination, same result. `main` holds the source. `base` stays `/` — this
+is a user page, not a project page.
 
 Verify a deploy actually landed rather than trusting the "Published" line:
 

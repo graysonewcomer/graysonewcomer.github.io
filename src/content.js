@@ -13,6 +13,7 @@
  * was ported from contained generated filler, so it is not a source for
  * anything factual.
  */
+import sections from './content/sections.json';
 import hero from './content/hero.json';
 import about from './content/about.json';
 import stack from './content/stack.json';
@@ -20,6 +21,9 @@ import work from './content/work.json';
 import projects from './content/projects.json';
 import contact from './content/contact.json';
 
+// Order matters: it sets the section labels, the spine's node order, and the
+// number of shapes the particle cloud morphs through.
+export const SECTIONS = sections;
 export const HERO = hero;
 export const ABOUT = about;
 export const STACK = stack;

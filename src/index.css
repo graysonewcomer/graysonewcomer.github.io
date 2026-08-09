@@ -31,8 +31,122 @@ body {
   pointer-events: none;
 }
 
+/*
+  Pixel field. Sits above the canvas but below `main`, so the per-section scrim
+  dims it behind the copy and it only really reads over the open right-hand side.
+*/
+.scene::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(74, 222, 128, 0.13) 1px, transparent 1px);
+  background-size: 9px 9px;
+}
+
 /* Content sits above the fixed canvas layer. */
 main { position: relative; z-index: 2; }
+
+/*
+  Signal spine: a rail down the left gutter that fills as you scroll, with a
+  node per section. Fixed, so it maps page progress onto viewport height.
+*/
+.spine {
+  position: fixed;
+  left: 1.5rem;
+  top: 12vh;
+  bottom: 12vh;
+  width: 1px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.spine-rail,
+.spine-lit {
+  position: absolute;
+  inset: 0;
+  background: var(--green);
+}
+
+.spine-rail { opacity: 0.15; }
+
+/* Scaled rather than resized: transform doesn't touch layout, so this can run
+   every frame without forcing the browser to reflow the page behind it. */
+.spine-lit {
+  opacity: 0.85;
+  transform-origin: top;
+  transform: scaleY(0);
+}
+
+.spine-node {
+  position: absolute;
+  left: 50%;
+  width: 15px;
+  height: 15px;
+  margin: -7px 0 0 -7px;
+  border: 1px solid var(--green);
+  border-radius: 50%;
+  pointer-events: auto;
+  transition: opacity 0.35s ease, border-color 0.35s ease, transform 0.35s ease;
+}
+
+/* The filled centre. */
+.spine-node::after {
+  content: '';
+  position: absolute;
+  inset: 4.5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.spine-node[data-state='off'] { color: var(--green); opacity: 0.22; }
+.spine-node[data-state='on'] { color: var(--green); opacity: 0.6; }
+
+.spine-node[data-state='live'] {
+  color: #fff;
+  border-color: #fff;
+  opacity: 1;
+  transform: scale(1.35);
+}
+
+/* Trace + label branch out of the live node only. Everything else stays a
+   bare dot, or the gutter turns into a second navigation column. */
+.spine-trace,
+.spine-label {
+  position: absolute;
+  left: 22px;
+  top: 50%;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.spine-trace {
+  width: 26px;
+  height: 1px;
+  background: #fff;
+  transform: translateY(-0.5px);
+}
+
+.spine-label {
+  left: 54px;
+  transform: translateY(-50%) scale(0.85);
+  transform-origin: left center;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.spine-node[data-state='live'] .spine-trace,
+.spine-node[data-state='live'] .spine-label { opacity: 0.9; }
+
+/* No gutter to put it in on a phone. */
+@media (max-width: 900px) {
+  .spine { display: none; }
+}
 
 /*
   Scrim: 25k additive particles behind body copy is unreadable, so each content

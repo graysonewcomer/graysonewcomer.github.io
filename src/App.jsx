@@ -1,5 +1,6 @@
 import { Scene } from './scene/Scene';
-import { HERO, ABOUT, STACK, WORK, PROJECTS, CONTACT } from './content';
+import { SignalSpine } from './ui/SignalSpine';
+import { SECTIONS, HERO, ABOUT, STACK, WORK, PROJECTS, CONTACT } from './content';
 
 /**
  * Content column sits left; the cloud is offset right (see Rig.jsx) so the two
@@ -10,6 +11,7 @@ export default function App() {
   return (
     <>
       <Scene />
+      <SignalSpine />
 
       <main>
         <section id="intro" className="intro">
@@ -19,7 +21,7 @@ export default function App() {
               but the page still needs a real <h1> for screen readers and search.
             */}
             <h1 className="sr-only">{HERO.name}</h1>
-            <span className="label">00 / hello</span>
+            <span className="label">{SECTIONS[0].label}</span>
             <p className="role" aria-hidden="true">
               {HERO.role}
               <span className="dim"> · {HERO.at}</span>
@@ -30,7 +32,7 @@ export default function App() {
 
         <section id="about">
           <div className="col">
-            <span className="label">01 / about</span>
+            <span className="label">{SECTIONS[1].label}</span>
             <h2>About</h2>
             <p className="lead">{ABOUT.lead}</p>
             {ABOUT.body.map((p) => (
@@ -41,7 +43,7 @@ export default function App() {
 
         <section id="stack">
           <div className="col">
-            <span className="label">02 / stack</span>
+            <span className="label">{SECTIONS[2].label}</span>
             <h2>Stack</h2>
             <dl className="stack">
               {STACK.map(({ group, items }) => (
@@ -60,7 +62,7 @@ export default function App() {
 
         <section id="work">
           <div className="col">
-            <span className="label">03 / work</span>
+            <span className="label">{SECTIONS[3].label}</span>
             <h2>Work</h2>
             {WORK.map((job) => (
               <article className="entry" key={job.what + job.where}>
@@ -85,7 +87,7 @@ export default function App() {
 
         <section id="contact">
           <div className="col">
-            <span className="label">04 / contact</span>
+            <span className="label">{SECTIONS[4].label}</span>
             <h2>Contact</h2>
             <p className="lead">
               Always up for hearing about new projects — or just to say hi.
