@@ -1,0 +1,89 @@
+<!--
+  Placeholder for the about-section portrait.
+
+  Deliberately not a likeness — it's a lighting study, there to prove the
+  sampling pipeline and show how tone becomes particle density. Replace it with a
+  real photo and point PORTRAIT_SRC in src/lib/cloud.js at the new file.
+
+  What the sampler wants from the replacement, and what this models:
+
+  - ONE light source across the whole subject. This is not cosmetic. Luminance
+    decides which pixels survive, so any band that falls dark enough gets thinned
+    away — and if that band crosses the neck, the head detaches and floats. The
+    first version of this file lit the head, neck and shoulders with separate
+    gradients and sampled as three disconnected blobs.
+  - A dark background, so it loses the competition for particles outright.
+  - The subject filling most of the frame.
+
+  Features are semi-transparent black and white over the shared gradient rather
+  than flat fills, so they modulate the light instead of replacing it. A flat grey
+  eye socket on the lit side reads as a hole punched in a mask.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <defs>
+    <!--
+      userSpaceOnUse, not the default objectBoundingBox: one light in figure
+      coordinates, so tone runs continuously across the seams between shapes
+      instead of restarting inside each one.
+    -->
+    <!--
+      The radius has to reach the far corner of the figure (841px away) and the
+      last stop has to be true black. SVG pads a radial gradient beyond its
+      radius, so a short radius or a dim final stop leaves the whole far region a
+      flat wash a few percent above black — which samples as isolated speckle
+      rather than a falloff, because a uniformly dim area gets a uniformly tiny
+      keep probability.
+    -->
+    <radialGradient id="light" gradientUnits="userSpaceOnUse" cx="300" cy="250" r="860">
+      <stop offset="0" stop-color="#ffffff" />
+      <stop offset="0.18" stop-color="#e2e2e2" />
+      <stop offset="0.40" stop-color="#9c9c9c" />
+      <stop offset="0.62" stop-color="#585858" />
+      <stop offset="0.82" stop-color="#232323" />
+      <stop offset="1" stop-color="#000000" />
+    </radialGradient>
+  </defs>
+
+  <rect width="800" height="1000" fill="#000000" />
+
+  <!-- The figure. Neck before shoulders before head: each occludes the last. -->
+  <g fill="url(#light)">
+    <path d="M 340 540 L 460 540 L 470 800 L 330 800 Z" />
+    <path d="M 120 1000 C 140 812 258 742 400 742 C 542 742 660 812 680 1000 Z" />
+    <!-- Tapered jaw and chin rather than an ellipse, which samples as an egg. -->
+    <path d="M 400 148
+             C 300 148 244 220 244 320
+             C 244 400 250 450 268 496
+             C 292 552 340 600 400 600
+             C 460 600 508 552 532 496
+             C 550 450 556 400 556 320
+             C 556 220 500 148 400 148 Z" />
+  </g>
+
+  <!-- Hair: kept to the top third so the forehead stays lit. -->
+  <path d="M 400 150 C 302 150 246 222 246 322 C 286 268 300 250 400 250
+           C 500 250 514 268 554 322 C 554 222 498 150 400 150 Z"
+        fill="#000000" opacity="0.82" />
+
+  <!-- Brow ridge catches the light; the sockets under it fall away. -->
+  <path d="M 300 356 C 330 344 366 344 394 354 L 394 366 C 366 358 330 358 300 368 Z"
+        fill="#ffffff" opacity="0.4" />
+  <path d="M 406 354 C 434 344 470 344 500 356 L 500 368 C 470 358 434 358 406 366 Z"
+        fill="#ffffff" opacity="0.28" />
+  <ellipse cx="332" cy="392" rx="36" ry="19" fill="#000000" opacity="0.6" />
+  <ellipse cx="468" cy="392" rx="36" ry="19" fill="#000000" opacity="0.68" />
+
+  <!-- Nose: lit ridge, shadowed on the side away from the light. -->
+  <path d="M 396 372 L 414 372 L 424 468 L 392 468 Z" fill="#ffffff" opacity="0.34" />
+  <path d="M 424 448 C 444 456 448 474 436 484 L 420 476 Z" fill="#000000" opacity="0.42" />
+
+  <!-- Mouth line and the shadow under the lower lip. -->
+  <path d="M 356 520 C 380 512 424 512 448 520 C 424 532 380 532 356 520 Z"
+        fill="#000000" opacity="0.5" />
+  <ellipse cx="402" cy="552" rx="42" ry="12" fill="#000000" opacity="0.22" />
+  <!-- Chin, and the jaw's underside falling into shadow. -->
+  <ellipse cx="398" cy="576" rx="30" ry="14" fill="#ffffff" opacity="0.2" />
+  <path d="M 268 500 C 300 566 344 606 400 606 C 456 606 500 566 532 500
+           C 520 580 470 630 400 630 C 330 630 280 580 268 500 Z"
+        fill="#000000" opacity="0.35" />
+</svg>
