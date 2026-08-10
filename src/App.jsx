@@ -1,5 +1,6 @@
 import { Scene } from './scene/Scene';
 import { SignalSpine } from './ui/SignalSpine';
+import { Console } from './ui/Console';
 import { SECTIONS, HERO, ABOUT, STACK, WORK, PROJECTS, CONTACT } from './content';
 
 /**
@@ -12,6 +13,7 @@ export default function App() {
     <>
       <Scene />
       <SignalSpine />
+      <Console />
 
       <main>
         <section id="intro" className="intro">

@@ -163,6 +163,19 @@ section:not(.intro)::before {
   );
 }
 
+/*
+  Timed to the takeover blend in ParticleCloud, so the scrim leaves as the shape
+  arrives instead of snapping away ahead of it.
+*/
+section:not(.intro)::before {
+  transition: opacity 0.55s ease;
+}
+
+/* The console is holding the cloud: give the centred shape the whole frame. */
+:root[data-cloud-held] section:not(.intro)::before {
+  opacity: 0;
+}
+
 section {
   position: relative;
   z-index: 1;
@@ -278,6 +291,101 @@ dd { margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
 @keyframes drift {
   0%, 100% { opacity: 0.35; transform: translateY(0); }
   50%      { opacity: 0.9;  transform: translateY(4px); }
+}
+
+/* Console ------------------------------------------------------------- */
+/*
+  Sits above `main` and the spine. Styled off the same tokens as everything else
+  on purpose: a console that looked like a dev tool would read as pasted onto the
+  scene, which is exactly how the cut physics toy failed.
+*/
+.console-open {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 4;
+  padding: 0.35rem 0.6rem;
+  font-family: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  background: rgba(11, 7, 16, 0.7);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.console-open:hover,
+.console-open:focus-visible {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.console {
+  position: fixed;
+  z-index: 4;
+  left: 1.25rem;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  max-width: 52rem;
+  margin-inline: auto;
+  height: min(24rem, 48vh);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+  background: rgba(11, 7, 16, 0.93);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 2px;
+  animation: console-in 0.18s ease-out;
+}
+
+@keyframes console-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.console-log {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+/* `help` aligns its columns with padEnd, and HTML would collapse those runs. */
+.console-line { white-space: pre-wrap; word-break: break-word; }
+
+.console-line.is-in { color: var(--text); }
+.console-line.is-out { color: var(--text-dim); }
+.console-line.is-err { color: var(--pink); }
+
+.console-caret { color: var(--green); }
+
+.console-prompt {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(139, 127, 160, 0.18);
+}
+
+.console-input {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: var(--text);
+  background: none;
+  border: none;
+  outline: none;
+  caret-color: var(--green);
+}
+
+@media (max-width: 700px) {
+  /* Leave room for the on-screen keyboard rather than fighting it. */
+  .console { height: min(18rem, 40vh); }
 }
 
 /* Visually hidden but still announced by screen readers. */

@@ -1,10 +1,16 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { scroll, sectionProgress } from '../lib/scroll';
 import { palette } from '../lib/theme';
-import { isMobile } from '../lib/device';
-import { textPoints, spherePoints, stackPoints, geodesicPoints, shellPoints } from './shapes';
+import { PARTICLE_COUNT, takeover, setFrameRequest } from '../lib/cloud';
+import {
+  textPoints,
+  smileyPoints,
+  stackPoints,
+  geodesicPoints,
+  shellPoints,
+} from './shapes';
 
 /**
  * The cloud. One THREE.Points object — a single draw call however many
@@ -15,24 +21,31 @@ import { textPoints, spherePoints, stackPoints, geodesicPoints, shellPoints } fr
  * docs/DECISIONS.md.
  */
 
-const COUNT_DESKTOP = 25000;
-const COUNT_MOBILE = 10000;
-
 /** How much of the transition each particle gets, once its delay has elapsed. */
 const TRAVEL = 0.65;
 /** Max fraction of the transition spent waiting. This is the whole effect. */
 const MAX_DELAY = 0.35;
 
+/** How fast the console's hold on the cloud comes and goes. */
+const TAKEOVER_DAMPING = 3.5;
+
 export function ParticleCloud({ reducedMotion }) {
   const points = useRef();
+  const invalidate = useThree((s) => s.invalidate);
 
-  const count = isMobile ? COUNT_MOBILE : COUNT_DESKTOP;
+  const count = PARTICLE_COUNT;
+
+  // Let console commands pull frames out of an on-demand frameloop.
+  useEffect(() => {
+    setFrameRequest(invalidate);
+    return () => setFrameRequest(null);
+  }, [invalidate]);
 
   // Built once. Order matches the sections in App.jsx.
   const shapes = useMemo(
     () => [
       textPoints('GRAYSON', count),
-      spherePoints(count),
+      smileyPoints(count),
       stackPoints(count),
       geodesicPoints(count),
       shellPoints(count),
@@ -76,7 +89,7 @@ export function ParticleCloud({ reducedMotion }) {
     return { positions, colors, seeds };
   }, [shapes, count]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const geo = points.current?.geometry;
     if (!geo) return;
 
@@ -85,6 +98,24 @@ export function ParticleCloud({ reducedMotion }) {
     const to = shapes[index + 1];
     const arr = geo.attributes.position.array;
     const time = reducedMotion ? 0 : state.clock.elapsedTime;
+
+    // Ease the console's hold on the cloud. Same frame-rate independent form as
+    // the scroll damping in scroll.js. Reduced motion snaps instead: there's no
+    // loop running to ease across, and an instant change is the right answer for
+    // that preference anyway.
+    if (reducedMotion) {
+      takeover.mix = takeover.want;
+    } else {
+      const dt = Math.min(delta, 0.1);
+      takeover.mix += (takeover.want - takeover.mix) * (1 - Math.exp(-TAKEOVER_DAMPING * dt));
+    }
+    // Fully handed back: drop the buffer so a one-off `spell` isn't held alive.
+    if (takeover.want === 0 && takeover.mix < 0.001) {
+      takeover.mix = 0;
+      takeover.shape = null;
+    }
+    const held = takeover.shape;
+    const hold = held ? takeover.mix : 0;
 
     for (let i = 0; i < count; i++) {
       const s = seeds[i];
@@ -105,6 +136,15 @@ export function ParticleCloud({ reducedMotion }) {
       x += arc * Math.sin(s * 41.0);
       y += arc * Math.cos(s * 73.0);
       z += arc * Math.sin(s * 17.0);
+
+      // The console's shape, pulling against wherever the scroll put this
+      // particle. Applied after the arc so a full hold lands exactly on the
+      // held shape, and before the drift so it still breathes.
+      if (hold > 0) {
+        x += (held[i3] - x) * hold;
+        y += (held[i3 + 1] - y) * hold;
+        z += (held[i3 + 2] - z) * hold;
+      }
 
       // Idle drift so a settled cloud is never truly static.
       if (!reducedMotion) {

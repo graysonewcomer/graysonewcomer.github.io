@@ -4,9 +4,20 @@ import { updateScroll } from '../lib/scroll';
 import { ParticleCloud } from './ParticleCloud';
 import { WireCore } from './WireCore';
 import { isMobile } from '../lib/device';
+import { takeover } from '../lib/cloud';
 
 /** How far right the cloud slides once you leave the hero, in world units. */
 const OFFSET_X = 2.0;
+/**
+ * Ceiling on that slide as a fraction of the visible width.
+ *
+ * The offset is a world distance and the fit below solves for a *centred* shape,
+ * so the two don't know about each other: on a narrow, tall viewport 2.0 units is
+ * a quarter of the frame and the right side of the shape leaves it. Invisible on
+ * the sphere and the shell, which have soft edges — obvious the moment a shape has
+ * a hard rim.
+ */
+const OFFSET_MAX_FRACTION = 0.16;
 /** Scroll range over which it slides. */
 const SLIDE_END = 0.14;
 /** World-unit width of the widest shape we need to keep on screen. */
@@ -38,7 +49,14 @@ export function Rig({ reducedMotion }) {
     if (group.current) {
       const slide = Math.min(t / SLIDE_END, 1);
       const eased = slide * slide * (3 - 2 * slide);
-      group.current.position.x = isMobile ? 0 : eased * OFFSET_X;
+      // A shape the console is holding slides back to centre. The fit below
+      // solves for a *centred* shape, so an offset cloud has that much less room
+      // on the right and a full-width shape crops — `spell` lost its last letter
+      // off the edge of a narrow viewport. Centring while held also reads well:
+      // the cloud comes back to the middle to be looked at.
+      const slideTo = Math.min(OFFSET_X, state.viewport.width * OFFSET_MAX_FRACTION);
+      const offset = isMobile ? 0 : eased * slideTo * (1 - takeover.mix);
+      group.current.position.x = offset;
 
       // Fit to the viewport. Shapes are authored in world units but a portrait
       // phone shows ~3.3 across, so at native scale GRAYSON crops. viewport
