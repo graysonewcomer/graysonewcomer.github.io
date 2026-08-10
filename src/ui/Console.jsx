@@ -9,6 +9,7 @@ import {
   geodesicPoints,
   shellPoints,
 } from '../scene/shapes';
+import { createLife } from '../scene/life';
 import { SECTIONS, HERO, ABOUT, STACK, CONTACT } from '../content';
 
 /**
@@ -56,6 +57,7 @@ const HELP = [
   ['resume', 'open the PDF'],
   ['spell <text>', 'the cloud spells it'],
   ['morph <shape>', `one of: ${Object.keys(SHAPES).join(', ')}`],
+  ['life [shape]', "Conway's Life, in 3D, in the cloud"],
   ['release', 'give the cloud back to the scroll'],
   ['clear', 'wipe the log'],
 ];
@@ -167,6 +169,44 @@ export function Console() {
           } catch (err) {
             say([{ kind: 'err', text: `could not build ${arg}: ${err.message}` }]);
           }
+          break;
+        }
+
+        case 'life': {
+          // Seeded from a shape if asked, otherwise a random ball. Either way the
+          // rule takes over within a few generations — it barely remembers what it
+          // started from, which is the fun of it.
+          let seedPoints = null;
+          if (arg) {
+            const make = SHAPES[arg.toLowerCase()];
+            if (!make) {
+              say([{ kind: 'err', text: `no shape "${arg}" to seed from. one of: ${Object.keys(SHAPES).join(', ')}` }]);
+              break;
+            }
+            try {
+              seedPoints = await make();
+            } catch (err) {
+              say([{ kind: 'err', text: `could not build ${arg}: ${err.message}` }]);
+              break;
+            }
+          }
+
+          const sim = createLife({
+            count: PARTICLE_COUNT,
+            seedPoints,
+            onEnd: (gen) => say([{ kind: 'err', text: `the population died out at generation ${gen}.` }]),
+          });
+
+          if (sim.seeded === 0) {
+            say([{ kind: 'err', text: 'nothing to seed from — that shape voxelised to nothing.' }]);
+            break;
+          }
+
+          seize(sim.held, sim.tick);
+          say([
+            { kind: 'out', text: `${sim.seeded} cells alive${arg ? `, seeded from ${arg}` : ''}. survive 4-12, born 10-13.` },
+            { kind: 'out', text: '`release` gives the cloud back.' },
+          ]);
           break;
         }
 

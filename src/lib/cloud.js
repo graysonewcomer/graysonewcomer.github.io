@@ -31,6 +31,12 @@ export const takeover = {
   shape: null,
   mix: 0,
   want: 0,
+  /**
+   * Optional per-frame driver, for a hold whose buffer changes over time rather
+   * than standing still — the Life simulation rewrites `shape` in place through
+   * this. Called once a frame, before the blend reads the buffer.
+   */
+  tick: null,
 };
 
 /**
@@ -59,9 +65,15 @@ function markHeld(held) {
   document.documentElement.toggleAttribute('data-cloud-held', held);
 }
 
-/** Pull the cloud onto an arbitrary buffer, away from the scroll. */
-export function seize(shape) {
+/**
+ * Pull the cloud onto an arbitrary buffer, away from the scroll.
+ *
+ * `tick` is for a hold that animates: pass a per-frame driver that rewrites the
+ * buffer, as `createLife` does. Omit it for a static shape.
+ */
+export function seize(shape, tick = null) {
   takeover.shape = shape;
+  takeover.tick = tick;
   takeover.want = 1;
   markHeld(true);
   requestFrame?.();
@@ -70,6 +82,10 @@ export function seize(shape) {
 /** Hand it back to the scroll. */
 export function release() {
   takeover.want = 0;
+  // Stop driving immediately rather than on the frame the blend finishes — a
+  // simulation left running through the hand-back keeps burning CPU behind a
+  // cloud that is no longer showing it.
+  takeover.tick = null;
   markHeld(false);
   requestFrame?.();
 }

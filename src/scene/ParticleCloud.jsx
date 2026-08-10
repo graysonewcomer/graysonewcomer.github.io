@@ -98,6 +98,9 @@ export function ParticleCloud({ reducedMotion }) {
     const to = shapes[index + 1];
     const arr = geo.attributes.position.array;
     const time = reducedMotion ? 0 : state.clock.elapsedTime;
+    // A backgrounded tab hands back a huge delta on return. Clamp it once here;
+    // both the hold and anything driving it need the clamped value.
+    const dt = Math.min(delta, 0.1);
 
     // Ease the console's hold on the cloud. Same frame-rate independent form as
     // the scroll damping in scroll.js. Reduced motion snaps instead: there's no
@@ -106,7 +109,6 @@ export function ParticleCloud({ reducedMotion }) {
     if (reducedMotion) {
       takeover.mix = takeover.want;
     } else {
-      const dt = Math.min(delta, 0.1);
       takeover.mix += (takeover.want - takeover.mix) * (1 - Math.exp(-TAKEOVER_DAMPING * dt));
     }
     // Fully handed back: drop the buffer so a one-off `spell` isn't held alive.
@@ -116,6 +118,11 @@ export function ParticleCloud({ reducedMotion }) {
     }
     const held = takeover.shape;
     const hold = held ? takeover.mix : 0;
+
+    // An animated hold rewrites its own buffer. Driven from here, before the loop
+    // below reads it, so the simulation and the blend can never disagree about
+    // which generation this frame is showing.
+    if (held && takeover.tick) takeover.tick(dt);
 
     for (let i = 0; i < count; i++) {
       const s = seeds[i];
