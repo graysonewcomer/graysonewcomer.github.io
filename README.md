@@ -78,17 +78,18 @@ for a random seed, `life smiley` (or any shape name) to seed from a shape. Escap
 closes the panel without stopping it, which is the way to watch. The rule is
 `S4-12/B10-13`, arrived at by simulating 1,296 candidates; `probeRule()` in
 `src/scene/life.js` is the tool that found it, and the reasoning is in
-[docs/DECISIONS.md](docs/DECISIONS.md). Changing the lattice size means re-testing
-the rule.
+`DECISIONS.md`. Changing the lattice size means re-testing the rule.
 
-Before changing anything in `src/scene/`, read
-[docs/DECISIONS.md](docs/DECISIONS.md). It's the list of things that were tried
-and didn't work, and roughly half of them fail in ways that are invisible until
-you've scrolled for 90 seconds or opened the page on a phone.
+Before changing anything in `src/scene/`, read `DECISIONS.md`. It's the list of
+things that were tried and didn't work, and roughly half of them fail in ways
+that are invisible until you've scrolled for 90 seconds or opened the page on a
+phone.
 
-[docs/IDEAS.md](docs/IDEAS.md) is the other half of that: what's still open, with
-the thinking and the known traps written down. `DECISIONS.md` is settled,
-`IDEAS.md` is not.
+`IDEAS.md` is the other half of that: what's still open, with the thinking and
+the known traps written down. `DECISIONS.md` is settled, `IDEAS.md` is not.
+
+Both notes now live in the Obsidian vault at `Documents/Obsidian Vault/`, not in
+this repo.
 
 ## Architecture
 
