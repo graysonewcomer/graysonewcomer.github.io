@@ -6,7 +6,7 @@
 portfolio, and an excuse to build something in three.js.
 
 Five sections of copy scroll over a fixed 25,000-particle cloud that reassembles
-into a different shape for each one: `GRAYSON` → sphere → clusters → geodesic
+into a different shape for each one: `GRAYSON` → smiley puck → clusters → geodesic
 dome → shell. Bloom, Khronos PBR Neutral tone mapping, and a wireframe core that
 grows in over the back half. No shader code — the morph is plain JS running once
 a frame.
@@ -38,10 +38,49 @@ github.com and a push to `main` publishes on its own; see [Deploy](#deploy).
 `src/lib/theme.js` mirrors the CSS custom properties in `src/index.css`; change
 a colour in one and change it in the other.
 
+### Turning any image into a shape
+
+`imagePoints()` in `src/scene/shapes.js` samples an image file into a point cloud —
+the same canvas trick as the text, with luminance standing in for alpha. No shape
+on the scroll page uses it right now (the about section is a procedural smiley),
+but it's live behind the console's `morph portrait`, pointed at the placeholder
+`public/portrait.svg`.
+
+To use a real image, drop it in `public/` and point `PORTRAIT_SRC` in
+`src/lib/cloud.js` at it. What the sampler wants: **one clear light source, a dark
+background, subject filling most of the frame.** Luminance decides which pixels
+become particles, so a bright background competes with the subject and wins. Strong
+side lighting beats a flat front flash — the light direction ends up encoded in the
+particle density, and brighter pixels sit slightly forward, so the form has real
+relief when the cloud yaws.
+
+Any aspect ratio works (the sample normalises on height) and exposure doesn't
+matter (the tone curve spans whatever range the image actually occupies).
+
+The one thing that genuinely doesn't work is a sparse image — thin line art, or
+text on a black field. An image whose total ink is smaller than the particle count
+can't supply 25,000 distinct positions, so particles double up. Photographs are
+nowhere near that limit; `public/og.png` is, and fills 14,075 of 25,000.
+
+### Console
+
+Backtick opens a console, or click `❯_` in the corner. `help` lists the commands.
+It's the door for anything playable — the scroll page is a fixed composition of
+five sections and five shapes, so a toy wedged into it fights the layout. A new
+one is a command in `src/ui/Console.jsx` instead.
+
+`spell <text>` and `morph <shape>` take the cloud away from the scroll through
+`src/lib/cloud.js`; `release` gives it back. Anything building a buffer for that
+channel has to emit exactly `PARTICLE_COUNT * 3` floats.
+
 Before changing anything in `src/scene/`, read
 [docs/DECISIONS.md](docs/DECISIONS.md). It's the list of things that were tried
 and didn't work, and roughly half of them fail in ways that are invisible until
 you've scrolled for 90 seconds or opened the page on a phone.
+
+[docs/IDEAS.md](docs/IDEAS.md) is the other half of that: what's still open, with
+the thinking and the known traps written down. `DECISIONS.md` is settled,
+`IDEAS.md` is not.
 
 ## Architecture
 

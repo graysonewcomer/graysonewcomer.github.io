@@ -50,6 +50,144 @@ Two supporting details: sub-pixel jitter on each sampled pixel, or the glyphs
 read as a screen-door lattice; and a shuffle before resampling, or the stride
 carves visible scanlines out of the letters.
 
+### Section 1 is a smiley puck, and it was a sphere, and briefly a portrait
+
+The sphere was the weakest shape on the page — generic, and the reason the geodesic
+entry below had to be written around it ("section 2 is already a sphere").
+
+A **portrait sampled from a photo** went in first and was cut on taste. The
+sampler that did it (`imagePoints`, below) is good and still in the tree, reachable
+from the console as `morph portrait`; the about section just isn't the place. Worth
+keeping in mind if it ever comes back: everything in the entries below was measured
+the hard way and doesn't need rediscovering.
+
+What's there now is the acid-house / greeter-sticker smiley as a shallow puck —
+filled face, eyes and mouth as voids, a cylinder wall extending back so it has a
+side rather than being a decal. It earns the slot on three counts the portrait
+didn't: it's iconic at a glance, it's radially symmetric so it never resolves into
+an unfortunate silhouette mid-morph (see the torus knot), and it's procedural, so
+there's no async load and no image file to get wrong.
+
+Whatever ends up here, the constraint that killed the physics toy still applies:
+correct content, wrong material is still wrong. A smiley *sticker* pasted on the
+page would fail exactly the way a JPEG of a face would. It works because it's built
+out of the same 25,000 particles as everything else.
+
+### The smiley's features are voids, not ink
+
+Additive particles make the disc glow, so the eyes and mouth have to be *absences*
+to read the way the sticker does: bright plate, dark face. Drawing them as extra
+particles instead gives a dark plate with a glowing grin, which is a different and
+considerably creepier object.
+
+Both boundary circles get their own slice of the budget on top of the wall. The
+silhouette carries the whole read, and a uniformly sampled cylinder leaves its
+edges soft — which is the one thing a disc cannot afford.
+
+### A hard-edged shape exposed a latent framing bug
+
+The cloud slides `OFFSET_X` (2.0 world units) to the right past the hero so it
+stops fighting the copy, and `WIDEST_SHAPE` separately solves a scale that fits the
+viewport. Neither knows about the other, so the offset eats into the room the fit
+thought it had, and on a narrow, tall viewport the right side of the shape leaves
+the frame.
+
+This was always true. The sphere and the shell hid it because a soft, fuzzy edge
+has no visible boundary to clip — the disc's rim made it obvious in one screenshot.
+The slide is now capped at `OFFSET_MAX_FRACTION` of the visible width.
+
+**A shape with a hard edge is the test case for framing.** Nothing with a soft
+boundary will ever tell you the truth about this.
+
+### Brightness sets particle *density*, not just inclusion
+
+Keeping every pixel above a threshold gives uniform density, and tone survives
+only as the outline of the kept region — a glowing flat plate with a hard edge.
+Verified by rasterising the sampled points to a coarse grid: every cell came back
+at the same occupancy.
+
+Each pixel is instead kept with a probability that rises with its brightness
+(`((q - cut) / (255 - cut)) ** 1.4`). Highlights come out dense, shadows thin
+away, and the silhouette dissolves into the dark instead of being cut out of it.
+The light direction is legible in the density alone.
+
+### Choosing the cutoff and hitting the particle count are separate jobs
+
+Conflating them is the trap, and it cost three passes to see.
+
+Solving the cutoff *for the yield* — walk it down until the expected number of
+survivors clears the target — sounds self-tuning and isn't. A subject that fills
+more of the frame pushes the cutoff higher, so only its highlights survive and the
+form comes apart; a dark image can't reach the target at any cutoff and comes up
+short. Measured on a real file: `og.png` filled 17,732 of 25,000 that way,
+`resample()` wrapped, and 29% of the positions were duplicates.
+
+So the cutoff now decides one thing only — what counts as background, taken as the
+brightest `POOL_RATIO * count` pixels — and a **gain solved off the histogram**
+(`target / Σ hist[q] * weight(q)`, clamped to 1) makes the probabilities integrate
+to the particle count. Framing and exposure stop mattering, and the subject's whole
+tonal range participates instead of just its top end.
+
+### The tone curve spans the image's own range, not 0..255
+
+A dim image's pool sits just above the cutoff. Measured against pure white, every
+pixel in it draws a near-zero probability, and the gain clamps at 1 before it can
+compensate — `og.png` fell to 12,827 with the gain in place but the curve still
+anchored to 255.
+
+Anchoring the curve to the brightest occupied bucket instead fixes it. A
+deliberately underexposed test image — everything inside the bottom 12% of the
+range — samples as 25,000 unique positions in **one** connected component. The
+darkest bucket's weight is kept off zero (`(q - cut + 1) / span`) so a perfectly
+flat image is a uniform keep rather than a divide by nothing.
+
+### `SAMPLE_MAX` is 900, not 520
+
+Only part of a frame is subject and only part of that survives the thinning, so the
+candidate pool has to be much larger than the particle count. At 520 the yield came
+in at 23,192 for a 25,000 particle cloud and `resample()` wrapped. Cost is ~30 ms
+once, including image decode.
+
+**Known limit:** an image whose total ink is smaller than the particle count can't
+supply enough distinct positions at any setting, and `resample()` wraps into
+duplicates. `og.png` — thin text on black — fills 14,075 of 25,000. Portrait crops
+are nowhere near this; sparse line art is.
+
+### Connectivity is the test that catches a bad sample, not eyeballing it
+
+The first placeholder lit the head, neck and shoulders with three separate
+`objectBoundingBox` gradients. Each shape restarted its own falloff, both joins
+fell dark enough to be thinned away, and it rendered as three disconnected blobs
+with the head floating above the body.
+
+A density map printed as ASCII *showed* this and it still got read as "silhouette
+reads correctly" — the gaps were blank rows and blank rows look like margin.
+Counting 8-connected components over the occupied cells is unambiguous: three
+blobs scored 0.94 in the largest component, one lit figure scores 0.999.
+
+Two things it caught that eyes did not: a radial gradient **pads** beyond its
+radius, so a short radius or a non-black final stop leaves the far end of the
+subject a flat dim wash that samples as isolated speckle rather than a falloff;
+and one light has to cross the whole figure in `userSpaceOnUse` coordinates, which
+is the same rule the README asks of a real photo.
+
+### An async shape must be copied *into* its slot, never swapped in
+
+No live code does this — every generator is synchronous again now that the about
+section is procedural. Recorded because the constraint isn't obvious and the next
+async shape will walk straight into it.
+
+`colors` is memoised on `shapes`. Handing that memo a new array rebuilds the colour
+buffer and reshuffles every particle's colour, which is glaring if it lands
+mid-scroll. So a late-arriving shape gets `.set()` into the existing Float32Array,
+keeping the array identity stable — no re-render at all, which is the same reason
+`scroll.js` exists.
+
+The write needs no synchronisation. The morph reads whatever is in the slot on the
+frame it runs, so a late arrival costs at most one frame of particles taking a
+different route. Failure has to leave the previous contents alone rather than
+zeroing the slot, or every particle collapses onto the origin.
+
 ### Section 4 is a geodesic lattice, and it was a torus knot
 
 Fully formed, the torus knot was fine. Halfway through the morph it resolved into
@@ -106,6 +244,72 @@ Using one number for both breaks the last section: its midpoint lies past the en
 of the scrollable range, clamps to 1, and `04 / contact` only lit in the final 2%
 of the page. Measured, not guessed — placement fractions came out 0 / 22.8 / 45.7
 / 72.8 / 100%, and contact never went live until scroll hit exactly 1.
+
+---
+
+## Console
+
+### The fun stuff gets a door, not a slot in the scroll
+
+The scroll page is one continuous composition: five sections, five shapes, one
+visual register. Things that are *played with* want dwell time; the scroll wants
+momentum. Wedging a toy into a section fights the layout every time — that's what
+the cut physics toy was, and the chips read as widgets pasted onto a pixel scene.
+
+So there's a console instead. One door, and the next toy is a command rather than
+a new layout problem. It's styled off the same tokens as the rest of the page for
+the same reason the toy failed: a panel that looked like a dev tool would be the
+pasted-on thing all over again.
+
+### The console→cloud channel is a mutable module object
+
+Same shape as `scroll.js`, same reason: `lib/cloud.js` exports a plain object that
+the render loop reads directly every frame, and React never learns it changed. A
+`setState` there would re-render the page on every frame of the blend.
+
+The console's own UI *is* React state, and that's not a contradiction — it
+re-renders per keystroke, not per frame.
+
+`PARTICLE_COUNT` moved into that module because of this: anything building a
+buffer to hand to the cloud has to emit exactly `count * 3` floats, and a
+mismatched length reads past the end of the array mid-blend. One definition, so
+the console and the cloud cannot disagree.
+
+### The takeover blend goes after the arc and before the drift
+
+After the arc, so a full hold lands exactly on the held shape instead of somewhere
+near it. Before the idle drift, so a held shape still breathes rather than freezing
+into a dead decal.
+
+### Focus return is gated on the transition, not on "has this run before"
+
+The console hands focus back to its opener when it closes. That effect also fires
+on mount with the panel shut, so unguarded it focused the button on page load —
+keyboard visitors started two thirds of the way down the tab order having done
+nothing.
+
+The obvious guard is a "first run" flag, and it doesn't work: **StrictMode invokes
+mount effects twice**, so the flag is already spent by the second pass and the
+focus steal comes back. Measured — `document.activeElement` was still
+`.console-open` on load with the flag in place.
+
+Tracking the previous value of `open` and acting only on the open→closed edge is
+correct under single and double invocation both. Any effect here that should run
+on a change and not on mount wants the same shape.
+
+### Reduced motion needs an explicit frame request
+
+Under `prefers-reduced-motion` the scene switches to an on-demand frameloop, so
+nothing renders between scrolls. `seize()` would set its flag and then wait for a
+loop that isn't running — `spell` would silently do nothing.
+
+Two halves to the fix: `seize`/`release` call R3F's `invalidate` (registered by
+ParticleCloud) to pull a frame, and the blend *snaps* rather than easing under
+that preference, because one frame is all it gets and an instant change is the
+right answer for the preference anyway.
+
+Worth knowing for anything else added to the console: **changing cloud state is
+not enough on its own, it has to ask for a frame too.**
 
 ---
 
