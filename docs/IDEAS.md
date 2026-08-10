@@ -20,43 +20,22 @@ The console makes a new toy a command instead of a layout problem.
 
 ---
 
-## Conway's Life on the point cloud
+## Conway's Life — **built**
 
-The strongest of the three: ambient, made of particles, and no new UI at all.
+Shipped. `life` in the console for a random seed, `life <shape>` to seed from any
+shape in the library. Escape closes the panel and it keeps running. The rule search,
+the fixed-tick interpolation, and the traps are all written up in `DECISIONS.md`.
 
-**Where it lives.** In the main scene, driven from the console — not a separate
-route. `seize()` in `src/lib/cloud.js` already hands an arbitrary buffer to the
-cloud every frame, so Life is a buffer that changes each generation instead of a
-static shape. `life seed` / `life stop` and it plays out in the about-to-work
-stretch of the page while the copy still scrolls over it. A redirect would throw
-away the one thing that makes it good, which is that it's the same 25,000
-particles that just spelled your name.
+What was *not* built, and is still open:
 
-**What it actually is.** Not 2D Life on a plane floating in 3D — that reads as a
-texture. Two options worth trying, in order:
-
-1. **A 3D lattice**, rules generalised to 26 neighbours. The classic survival set
-   doesn't hold in 3D — 2D's 2333 rules go to something like B5678/S45678 before
-   patterns stop either dying instantly or filling the volume. **Expect to spend
-   the time on rule tuning, not on the implementation.** That's the real risk.
-2. **Life on the geodesic's faces**, which sidesteps rule tuning by staying
-   2D-on-a-surface, and reuses the strut graph that `geodesicPoints` already
-   builds. Pentagons at the 12 icosahedral vertices mean 5 neighbours where
-   everything else has 6, so gliders break — fine for ambient, fatal for anything
-   with a goal.
-
-**Cost that has to be respected.** The morph is already ~1.8 ms/frame for 25k on
-the CPU. Life needs a generation step on a grid *plus* mapping live cells into the
-position buffer. Do the generation on a fixed tick (~6/sec), not per frame, and
-interpolate between generations — stepping per frame is both wrong and 10x the
-cost. A 32³ lattice is 32,768 cells against 25,000 particles, which is roughly the
-right order; 64³ is 262k and far too many.
-
-**Seeding.** Clicking to seed means picking a 3D cell from a 2D click, and the
-canvas currently has `pointer-events: none` so the page still scrolls. Cheapest
-honest version: seed from a shape that already exists (`life seed portrait` starts
-from your face and lets it decay), plus a random fill. Ray-picking a lattice cell
-is a bigger job than the rest of the feature combined — do it last, if ever.
+- **Click to seed.** Picking a 3D cell from a 2D click, when the canvas is
+  deliberately `pointer-events: none` so the page still scrolls. This is a bigger
+  job than the rest of the feature was — the shape seeds cover most of the fun for
+  none of the cost.
+- **Life on the geodesic's faces** instead of a lattice, reusing the strut graph.
+  Sidesteps 3D rule tuning by staying 2D-on-a-surface. The 12 pentagons mean 5
+  neighbours where everything else has 6, so gliders break — fine for ambient,
+  fatal for anything with a goal. Would pair well with snake below.
 
 ## Spell anything — **built**
 

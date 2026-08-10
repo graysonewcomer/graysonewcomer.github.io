@@ -69,9 +69,17 @@ It's the door for anything playable — the scroll page is a fixed composition o
 five sections and five shapes, so a toy wedged into it fights the layout. A new
 one is a command in `src/ui/Console.jsx` instead.
 
-`spell <text>` and `morph <shape>` take the cloud away from the scroll through
-`src/lib/cloud.js`; `release` gives it back. Anything building a buffer for that
-channel has to emit exactly `PARTICLE_COUNT * 3` floats.
+`spell <text>`, `morph <shape>` and `life` take the cloud away from the scroll
+through `src/lib/cloud.js`; `release` gives it back. Anything building a buffer for
+that channel has to emit exactly `PARTICLE_COUNT * 3` floats.
+
+`life` runs Conway's Life on a 24³ lattice and displays it with the cloud — `life`
+for a random seed, `life smiley` (or any shape name) to seed from a shape. Escape
+closes the panel without stopping it, which is the way to watch. The rule is
+`S4-12/B10-13`, arrived at by simulating 1,296 candidates; `probeRule()` in
+`src/scene/life.js` is the tool that found it, and the reasoning is in
+[docs/DECISIONS.md](docs/DECISIONS.md). Changing the lattice size means re-testing
+the rule.
 
 Before changing anything in `src/scene/`, read
 [docs/DECISIONS.md](docs/DECISIONS.md). It's the list of things that were tried

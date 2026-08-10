@@ -313,6 +313,77 @@ not enough on its own, it has to ask for a frame too.**
 
 ---
 
+## Life
+
+### The rule was found by search, not by reputation
+
+This is where the time went, exactly as expected, and it is worth knowing why so
+nobody "simplifies" the rule back to something familiar.
+
+2D's B3/S23 does not survive the move to 26 neighbours. Neither does **Bays' 5766
+(S5-7/B6-6), the canonical 3D Life rule everyone cites** — from a random seed it
+collapses to a *seven-cell still life* with zero churn. It was the module's first
+default, on reputation alone, and it was wrong.
+
+So 1,296 candidate rules were simulated and scored. The first scoring pass rewarded
+churn and produced a shortlist of rules flipping 25-35% of all cells per generation
+— that isn't life, it's television static. Structure needs **clustering**, so the
+score gained a clump/fill ratio: mean neighbour count among live cells against the
+overall fill. Sprinkled noise scores ~1, clustered blobs score 7 and up.
+
+`S4-12/B10-13` won: holds 620-870 live cells indefinitely, turns over ~65% of its
+population per generation so it reads as alive, clump/fill of 7.3, and behaves
+near-identically from any seed — which matters because it's seeded from shapes as
+well as randomly. Verified at the real 24³ lattice across three seeds for 150
+generations each, then again from a text seed of only 246 cells, which also lives.
+
+`probeRule()` stays exported from `life.js` so this is re-checkable. **Change the
+lattice size and the rule needs re-testing** — behaviour at 16³ was not the same.
+
+### Generations run on a fixed tick, interpolated between
+
+One generation every 0.5s, with particle positions smoothstepped from the previous
+generation's targets to the next. Stepping the simulation per frame would be both
+wrong-looking — cells blinking instead of travelling — and about thirty times the
+cost for no gain.
+
+Interpolation is the entire reason this belongs in the scene rather than on its own
+page. Cells that *travel* are the same effect as the section morph; cells that
+blink are a Life implementation like any other.
+
+Measured: 960 frames across 8 generations, median 4.2 ms, max 5.6 ms, **zero frames
+over 16 ms.** The 359k-operation generation step disappears into the tick.
+
+### Particles are dealt across live cells in lattice order
+
+The cell list is built by walking the lattice and particles are spread across it
+proportionally. That ordering is load-bearing: consecutive generations produce
+similar lists, so particle `p` lands near where it was and the interpolation reads
+as movement.
+
+Shuffle the list — or assign particles to cells any other way — and every
+generation becomes an unrelated teleport, which looks like a glitch rather than an
+organism.
+
+### The takeover channel grew a per-frame driver
+
+`takeover.tick` is called from `ParticleCloud`'s `useFrame`, before the blend reads
+the buffer, so the simulation and the blend can never disagree about which
+generation a frame is showing. Giving Life its own loop or its own component would
+put that ordering at the mercy of mount order.
+
+`release()` clears `tick` immediately rather than when the blend finishes fading —
+otherwise the simulation keeps burning CPU behind a cloud that has stopped showing
+it.
+
+### A dead population freezes; it does not collapse
+
+If the rule kills everything, the buffer keeps its last positions and the console
+says which generation it died at. Zeroing the buffer would drag all 25,000
+particles onto the origin, which reads as a crash rather than an ending.
+
+---
+
 ## Rendering
 
 ### Accent colours carry a 1.5x brightness boost
