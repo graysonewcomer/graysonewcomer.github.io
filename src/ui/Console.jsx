@@ -10,6 +10,7 @@ import {
   shellPoints,
 } from '../scene/shapes';
 import { createLife } from '../scene/life';
+import { createSnake } from '../scene/snake';
 import { SECTIONS, HERO, ABOUT, STACK, CONTACT } from '../content';
 
 /**
@@ -58,6 +59,7 @@ const HELP = [
   ['spell <text>', 'the cloud spells it'],
   ['morph <shape>', `one of: ${Object.keys(SHAPES).join(', ')}`],
   ['life [shape]', "Conway's Life, in 3D, in the cloud"],
+  ['snake', 'snake on the geodesic. ← → steer, esc to watch'],
   ['release', 'give the cloud back to the scroll'],
   ['clear', 'wipe the log'],
 ];
@@ -76,6 +78,14 @@ export function Console() {
   const historyRef = useRef([]);
   const cursorRef = useRef(-1);
   const nextId = useRef(1);
+  // The running game, if any. It owns a window keydown listener, so anything
+  // that takes the cloud away from it has to dispose it — otherwise the arrows
+  // keep steering a snake nobody can see.
+  const snakeRef = useRef(null);
+  const stopSnake = useCallback(() => {
+    snakeRef.current?.dispose();
+    snakeRef.current = null;
+  }, []);
 
   const say = useCallback((entries) => {
     setLog((prev) => [
@@ -95,6 +105,9 @@ export function Console() {
 
       const [cmd, ...rest] = line.split(/\s+/);
       const arg = rest.join(' ');
+
+      // Anything that takes the cloud ends the game that was holding it.
+      if (['spell', 'morph', 'life', 'snake', 'release'].includes(cmd.toLowerCase())) stopSnake();
 
       switch (cmd.toLowerCase()) {
         case 'help':
@@ -210,6 +223,22 @@ export function Console() {
           break;
         }
 
+        case 'snake': {
+          const game = createSnake({
+            count: PARTICLE_COUNT,
+            onEat: (score) => say([{ kind: 'out', text: `${score}` }]),
+            onEnd: (score) => say([{ kind: 'err', text: `ate itself. final score ${score}.` }]),
+          });
+          snakeRef.current = game;
+          seize(game.held, game.tick);
+          say([
+            { kind: 'out', text: '← → or a/d to steer. one notch per press, applied at the next joint.' },
+            { kind: 'out', text: 'the 12 pentagons have no straight ahead — you will be turned there.' },
+            { kind: 'out', text: '`esc` closes this and keeps playing. `release` gives the cloud back.' },
+          ]);
+          break;
+        }
+
         case 'release':
           release();
           say([{ kind: 'out', text: 'the scroll has it back.' }]);
@@ -223,8 +252,11 @@ export function Console() {
           say([{ kind: 'err', text: `${cmd}: not a command. try \`help\`.` }]);
       }
     },
-    [say]
+    [say, stopSnake]
   );
+
+  // A game outlives the panel, so it has to be torn down on unmount too.
+  useEffect(() => stopSnake, [stopSnake]);
 
   // Backtick toggles. Tilde too — it's the same physical key, and expecting
   // people to notice whether shift is down is a bad bet.
