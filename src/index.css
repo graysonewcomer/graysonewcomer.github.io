@@ -322,6 +322,53 @@ dd { margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
   border-color: var(--green);
 }
 
+/*
+ * The game readout. Deliberately built from the console opener's tokens rather
+ * than as a new piece of chrome — the physics toy died for looking like a widget
+ * pasted onto the scene, and a scoreboard is exactly the shape of that mistake.
+ * Opposite corner from the opener so the two never collide.
+ */
+.snake-hud {
+  position: fixed;
+  left: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+}
+
+.snake-score {
+  min-width: 2.5rem;
+  padding: 0.35rem 0.6rem;
+  color: var(--green);
+  background: rgba(11, 7, 16, 0.7);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.snake-hud button {
+  padding: 0.35rem 0.6rem;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  color: var(--text-dim);
+  background: rgba(11, 7, 16, 0.7);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.snake-hud button:hover,
+.snake-hud button:focus-visible {
+  color: var(--green);
+  border-color: var(--green);
+}
+
 .console {
   position: fixed;
   z-index: 4;

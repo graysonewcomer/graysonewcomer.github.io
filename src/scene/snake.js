@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { buildGeodesicGraph, turnsFrom } from './geodesic';
+import { takeover } from '../lib/cloud';
 
 /**
  * Snake, played on the geodesic's struts.
@@ -53,6 +54,27 @@ const FOOD_SHARE = 0.08;
  * differently twice.
  */
 const DEFAULT_BIAS = 1;
+
+/**
+ * How far the viewpoint swings off the head's normal, in radians, *sideways*
+ * relative to the direction of travel.
+ *
+ * Sideways is the only direction that works, and the reason is worth keeping.
+ * Going straight puts the snake on a great circle, and that circle lies in the
+ * plane spanned by the head's normal and its heading. A camera on the normal is
+ * inside that plane, so the body projects edge-on to a dead straight line
+ * through the middle of the sphere — and laying the camera *back* along the
+ * heading doesn't help, because that stays in the same plane. Only a component
+ * along the binormal takes the view out of the plane and turns the body back
+ * into an arc with visible depth.
+ *
+ * There is no tilt that both centres the head and keeps the body curved — the
+ * two are the same knob. Dead centre is a straight line, and the head sits `sin`
+ * of this angle out toward the limb. Tried at ~30°, where the arc flattens back
+ * out and depth goes with it; ~40° is where the body clearly hugs the struts,
+ * and paying for it with an off-centre head is the better trade.
+ */
+const CHASE_TILT = Math.PI * 0.22;
 
 export function createSnake({ count, onEat = null, onEnd = null }) {
   const graph = buildGeodesicGraph();
@@ -161,6 +183,58 @@ export function createSnake({ count, onEat = null, onEnd = null }) {
   const a = new THREE.Vector3();
   const b = new THREE.Vector3();
 
+  /**
+   * Turn the board so the head faces the viewer, travelling up the screen.
+   *
+   * Half a sphere is always facing away, and without this you're steering a head
+   * you can't see toward edges you can't judge — the depth ambiguity makes the
+   * fan of options unreadable even when the maths behind them is exact.
+   *
+   * Two constraints, not one. Pointing the head at the camera is the obvious
+   * half; aligning the direction of travel with screen-up is the half that makes
+   * the controls learnable, because then "left" is always left on screen instead
+   * of depending on where the head happens to have wandered.
+   *
+   * The tilt is not decoration. Putting the head's normal *exactly* on the view
+   * axis while travel points up puts the snake's whole great circle in the view
+   * plane, and the body projects onto a dead straight vertical line through the
+   * middle of the sphere — every bit of depth collapses. Backing the viewpoint
+   * off along the direction of travel turns it into a chase camera: the path
+   * ahead sweeps away from you and the body trails toward you with real extent.
+   */
+  const fwd = new THREE.Vector3();
+  const nrm = new THREE.Vector3();
+  const view = new THREE.Vector3();
+  const up = new THREE.Vector3();
+  const side = new THREE.Vector3();
+  const basis = new THREE.Matrix4();
+
+  function orient() {
+    if (next === null) return;
+    // Head normal, and the direction it is travelling, both at the head's
+    // current position rather than at the joint behind it.
+    nrm.copy(graph.positions[at]).lerp(graph.positions[next], t).normalize();
+    fwd.subVectors(graph.positions[next], graph.positions[at]);
+    fwd.addScaledVector(nrm, -fwd.dot(nrm)).normalize();
+
+    // Binormal — the one axis that isn't in the plane the snake is turning in.
+    side.crossVectors(fwd, nrm);
+    // Viewpoint: off the head's normal, swung out along that binormal.
+    view.copy(nrm).multiplyScalar(Math.cos(CHASE_TILT)).addScaledVector(side, Math.sin(CHASE_TILT));
+    // Travel stays screen-up. It's already perpendicular to both terms of `view`,
+    // so this needs no correction — the orthogonalisation is kept only because a
+    // future tilt that isn't purely sideways would silently need it.
+    up.copy(fwd).addScaledVector(view, -fwd.dot(view)).normalize();
+    side.crossVectors(up, view);
+
+    // Maps local (side, up, view) onto world (x, y, z), so the inverse is the
+    // rotation that brings the head around to face the camera.
+    basis.makeBasis(side, up, view);
+    takeover.orient = (takeover.orient ?? new THREE.Quaternion())
+      .setFromRotationMatrix(basis)
+      .invert();
+  }
+
   /** World-space polyline of the body, head end first, including the part-walked edge. */
   const line = [];
   function buildLine() {
@@ -236,6 +310,7 @@ export function createSnake({ count, onEat = null, onEnd = null }) {
   window.addEventListener('keydown', onKey);
 
   draw();
+  orient();
 
   return {
     held,
@@ -256,6 +331,7 @@ export function createSnake({ count, onEat = null, onEnd = null }) {
         pending = 0;
       }
       draw();
+      orient();
     },
     dispose() {
       window.removeEventListener('keydown', onKey);

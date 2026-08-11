@@ -37,6 +37,15 @@ export const takeover = {
    * this. Called once a frame, before the blend reads the buffer.
    */
   tick: null,
+  /**
+   * Optional orientation the scene should turn toward, as a THREE.Quaternion.
+   *
+   * A hold that has a *front* sets this and Rig eases the group onto it. Snake
+   * needs it: on a sphere the interesting part is wherever the head is, and half
+   * the board is always facing away. Nothing else sets it, and null means the
+   * group returns to its resting orientation.
+   */
+  orient: null,
 };
 
 /**
@@ -74,6 +83,9 @@ function markHeld(held) {
 export function seize(shape, tick = null) {
   takeover.shape = shape;
   takeover.tick = tick;
+  // Cleared rather than carried: a new hold inherits no facing, and a driver
+  // that wants one sets it on its first tick.
+  takeover.orient = null;
   takeover.want = 1;
   markHeld(true);
   requestFrame?.();
@@ -86,6 +98,7 @@ export function release() {
   // simulation left running through the hand-back keeps burning CPU behind a
   // cloud that is no longer showing it.
   takeover.tick = null;
+  takeover.orient = null;
   markHeld(false);
   requestFrame?.();
 }

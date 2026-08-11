@@ -82,10 +82,28 @@ export function Console() {
   // that takes the cloud away from it has to dispose it — otherwise the arrows
   // keep steering a snake nobody can see.
   const snakeRef = useRef(null);
+  // Mirrored into React state purely for the on-screen readout. Per *step*, not
+  // per frame — the score changes a few times a run, so this is nowhere near the
+  // per-frame re-render that lib/cloud.js exists to avoid.
+  const [game, setGame] = useState(null);
+
   const stopSnake = useCallback(() => {
     snakeRef.current?.dispose();
     snakeRef.current = null;
+    setGame(null);
   }, []);
+
+  const startSnake = useCallback(() => {
+    stopSnake();
+    const g = createSnake({
+      count: PARTICLE_COUNT,
+      onEat: (score) => setGame({ score, dead: false }),
+      onEnd: (score) => setGame({ score, dead: true }),
+    });
+    snakeRef.current = g;
+    setGame({ score: 0, dead: false });
+    seize(g.held, g.tick);
+  }, [stopSnake]);
 
   const say = useCallback((entries) => {
     setLog((prev) => [
@@ -224,17 +242,11 @@ export function Console() {
         }
 
         case 'snake': {
-          const game = createSnake({
-            count: PARTICLE_COUNT,
-            onEat: (score) => say([{ kind: 'out', text: `${score}` }]),
-            onEnd: (score) => say([{ kind: 'err', text: `ate itself. final score ${score}.` }]),
-          });
-          snakeRef.current = game;
-          seize(game.held, game.tick);
+          startSnake();
           say([
             { kind: 'out', text: '← → or a/d to steer. one notch per press, applied at the next joint.' },
             { kind: 'out', text: 'the 12 pentagons have no straight ahead — you will be turned there.' },
-            { kind: 'out', text: '`esc` closes this and keeps playing. `release` gives the cloud back.' },
+            { kind: 'out', text: '`esc` closes this and plays. score and restart are on screen.' },
           ]);
           break;
         }
@@ -252,7 +264,7 @@ export function Console() {
           say([{ kind: 'err', text: `${cmd}: not a command. try \`help\`.` }]);
       }
     },
-    [say, stopSnake]
+    [say, stopSnake, startSnake]
   );
 
   // A game outlives the panel, so it has to be torn down on unmount too.
@@ -329,6 +341,30 @@ export function Console() {
         <span aria-hidden="true">❯_</span>
         <span className="sr-only">Open console</span>
       </button>
+
+      {/*
+        Only while the panel is shut, which is exactly when it's needed: the log
+        is the readout otherwise, and the panel covers this corner anyway.
+      */}
+      {game && !open && (
+        <div className="snake-hud">
+          <span className="snake-score" aria-live="polite">
+            {game.dead ? `ate itself · ${game.score}` : game.score}
+          </span>
+          <button type="button" onClick={startSnake}>
+            restart
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              stopSnake();
+              release();
+            }}
+          >
+            quit
+          </button>
+        </div>
+      )}
 
       {open && (
         <div className="console" role="dialog" aria-label="Console">

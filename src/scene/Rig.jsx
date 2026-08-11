@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { Quaternion } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { updateScroll } from '../lib/scroll';
 import { ParticleCloud } from './ParticleCloud';
@@ -22,6 +23,14 @@ const OFFSET_MAX_FRACTION = 0.16;
 const SLIDE_END = 0.14;
 /** World-unit width of the widest shape we need to keep on screen. */
 const WIDEST_SHAPE = 7.2;
+/**
+ * How hard the group chases a hold's requested facing, per second. Slow enough
+ * that the board reads as turning to follow the action rather than snapping to
+ * each step, fast enough to stay ahead of a 0.28s tick.
+ */
+const ORIENT_EASE = 3.2;
+/** Everything that isn't a game sits unrotated. */
+const REST = new Quaternion();
 
 /**
  * Drives the scene from the scroll signal.
@@ -63,6 +72,20 @@ export function Rig({ reducedMotion }) {
       // gives the visible extent at the focal plane — solve for a scale that fits.
       const fit = Math.min(1, (state.viewport.width * 0.9) / WIDEST_SHAPE);
       group.current.scale.setScalar(fit);
+
+      // A hold with a front turns the whole group to face it — snake sets this
+      // so the head stays toward the camera on a board where half the struts are
+      // always behind the sphere. Eased rather than snapped: a 63° turn every
+      // step would otherwise jerk the entire scene.
+      //
+      // Under reduced motion the board simply doesn't turn. It costs the player
+      // the far side, which is worse than the alternative of spinning the page's
+      // whole background on a timer nobody asked for.
+      if (takeover.orient && !reducedMotion) {
+        group.current.quaternion.slerp(takeover.orient, 1 - Math.exp(-ORIENT_EASE * delta));
+      } else if (!takeover.orient) {
+        group.current.quaternion.slerp(REST, 1 - Math.exp(-ORIENT_EASE * delta));
+      }
     }
   });
 
