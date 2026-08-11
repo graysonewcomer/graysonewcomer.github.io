@@ -88,8 +88,9 @@ phone.
 `IDEAS.md` is the other half of that: what's still open, with the thinking and
 the known traps written down. `DECISIONS.md` is settled, `IDEAS.md` is not.
 
-Both notes now live in the Obsidian vault at `Documents/Obsidian Vault/`, not in
-this repo.
+Both notes now live in the Obsidian vault, not in this repo:
+`Documents/Obsidian Vault/PortfolioWebsite/decisions/DECISIONS.md` and
+`Documents/Obsidian Vault/PortfolioWebsite/ideas/IDEAS.md`.
 
 ## Architecture
 
