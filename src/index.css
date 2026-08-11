@@ -407,6 +407,56 @@ dd { margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
   border-color: var(--green);
 }
 
+/*
+ * Reserve horizontal gestures for the game while the cloud is held, and leave
+ * vertical ones to the page. Without this the browser has already claimed a
+ * sideways drag as a scroll before the first touchmove fires, and the swipe
+ * handler's preventDefault arrives too late to stop it.
+ *
+ * Keyed off the hold rather than off snake specifically, so it can't be left on
+ * after the game ends — cloud.js owns that attribute.
+ */
+[data-cloud-held] body {
+  touch-action: pan-y;
+}
+
+/*
+ * The steering pads exist for touch. On a pointer device the arrow keys are
+ * better in every way and two extra buttons would just be clutter, so they're
+ * hidden — `pointer: coarse` is the honest test for "this is a finger", where a
+ * width breakpoint would also catch a small desktop window.
+ */
+/*
+ * Scoped under .snake-hud on purpose: `.snake-hud button` above is more specific
+ * than a bare `.snake-steer`, so the sizing below silently lost to it and the
+ * pads came out 28px tall — half a touch target.
+ */
+.snake-hud .snake-steer {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  /*
+   * The steering pads make the readout wide enough to run into the console dock
+   * in the opposite corner on a phone, so it moves up onto its own row. Can't
+   * just hide the dock while a game is held: that attribute is set for every
+   * hold, including `morph` and `spell`, and a phone has no backtick to reopen
+   * the console with.
+   */
+  .snake-hud {
+    bottom: 5rem;
+  }
+
+  .snake-hud .snake-steer {
+    display: block;
+    /* Past the 44px minimum touch target in both directions. */
+    min-width: 3.25rem;
+    padding: 0.85rem 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.1;
+  }
+}
+
 .console {
   position: fixed;
   z-index: 4;

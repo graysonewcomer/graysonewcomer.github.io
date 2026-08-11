@@ -362,6 +362,30 @@ export function Console() {
           <span className="snake-score" aria-live="polite">
             {game.dead ? `ate itself · ${game.score}` : game.score}
           </span>
+          {/*
+            Touch only — see the CSS. Swipe is the better control and it's what a
+            phone reaches for first, but it's invisible, so these double as the
+            thing that tells you the game is steerable at all.
+
+            onPointerDown, not onClick: a tap fires click ~300ms late on some
+            mobile browsers, which is more than a whole step at this tick rate.
+          */}
+          <button
+            type="button"
+            className="snake-steer"
+            aria-label="Steer left"
+            onPointerDown={() => snakeRef.current?.steer(-1)}
+          >
+            <span aria-hidden="true">◀</span>
+          </button>
+          <button
+            type="button"
+            className="snake-steer"
+            aria-label="Steer right"
+            onPointerDown={() => snakeRef.current?.steer(1)}
+          >
+            <span aria-hidden="true">▶</span>
+          </button>
           <button type="button" onClick={startSnake}>
             restart
           </button>

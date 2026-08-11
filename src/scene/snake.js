@@ -80,6 +80,13 @@ const DEFAULT_BIAS = 1;
  */
 const CHASE_TILT = Math.PI * 0.22;
 
+/**
+ * Pixels of horizontal travel before a drag counts as a steer. Low enough to
+ * flick at, high enough that starting a vertical scroll with a slightly crooked
+ * thumb doesn't turn the snake on the way past.
+ */
+const SWIPE_MIN = 24;
+
 export function createSnake({ count, onEat = null, onEnd = null }) {
   const graph = buildGeodesicGraph();
   const n = graph.positions.length;
@@ -298,12 +305,17 @@ export function createSnake({ count, onEat = null, onEnd = null }) {
    * is with the console shut — same as Life. It ignores keys typed into a field
    * so the console's own history recall on the arrows still works.
    */
+  /** One notch, from anywhere: a key, a tap target, or a swipe. */
+  function steer(dir) {
+    if (!dead) pending = dir < 0 ? -1 : 1;
+  }
+
   function onKey(e) {
     const el = e.target;
     if (el instanceof HTMLElement && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) return;
     const k = e.key;
-    if (k === 'ArrowLeft' || k === 'a' || k === 'A') pending = -1;
-    else if (k === 'ArrowRight' || k === 'd' || k === 'D') pending = 1;
+    if (k === 'ArrowLeft' || k === 'a' || k === 'A') steer(-1);
+    else if (k === 'ArrowRight' || k === 'd' || k === 'D') steer(1);
     else return;
     e.preventDefault();
     // Deliberately does *not* re-resolve `next` here. `t` is the fraction along
@@ -311,7 +323,45 @@ export function createSnake({ count, onEat = null, onEnd = null }) {
     // teleports the head onto a different strut at the same fraction. The nudge
     // waits for the joint, which is also what makes it readable.
   }
+  /**
+   * Swipe, for touch.
+   *
+   * A horizontal drag steers; a vertical one is left alone so the page still
+   * scrolls out of the game. The direction is decided once per gesture and then
+   * latched — a thumb wandering across the screen would otherwise fire a notch
+   * every few pixels.
+   *
+   * `touch-action: pan-y` is set in CSS while the cloud is held, and it's what
+   * makes this work at all: without it the browser claims the horizontal gesture
+   * as a scroll before the first `touchmove` arrives, and `preventDefault` on an
+   * already-started scroll does nothing.
+   */
+  let sx = 0;
+  let sy = 0;
+  let latched = false;
+
+  function onTouchStart(e) {
+    const t = e.changedTouches[0];
+    sx = t.clientX;
+    sy = t.clientY;
+    latched = false;
+  }
+
+  function onTouchMove(e) {
+    if (latched || dead) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+    if (Math.abs(dx) < SWIPE_MIN || Math.abs(dx) < Math.abs(dy)) return;
+    steer(dx);
+    latched = true;
+    e.preventDefault();
+  }
+
   window.addEventListener('keydown', onKey);
+  window.addEventListener('touchstart', onTouchStart, { passive: true });
+  // Non-passive, or preventDefault is ignored and the page scrolls sideways.
+  window.addEventListener('touchmove', onTouchMove, { passive: false });
 
   draw();
   orient();
@@ -337,8 +387,11 @@ export function createSnake({ count, onEat = null, onEnd = null }) {
       draw();
       orient();
     },
+    steer,
     dispose() {
       window.removeEventListener('keydown', onKey);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
     },
     get score() {
       return score;
