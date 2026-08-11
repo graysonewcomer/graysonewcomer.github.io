@@ -29,8 +29,12 @@ import { takeover } from '../lib/cloud';
 /** Seconds per step. Slow enough to read a 63° turn coming; snake is not twitchy. */
 const STEP = 0.28;
 
-/** Vertices added per pickup. The board is 42 joints — growth has to be gentle. */
-const GROWTH = 2;
+/**
+ * Vertices added per pickup. One joint per pickup, so the body length is always
+ * just the score plus the one you started with — anything else makes a 42-joint
+ * board fill up faster than you can read it.
+ */
+const GROWTH = 1;
 
 /** Starting body length, in vertices. A single joint — you grow from nothing. */
 const START_LEN = 1;
