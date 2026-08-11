@@ -32,8 +32,8 @@ const STEP = 0.28;
 /** Vertices added per pickup. The board is 42 joints — growth has to be gentle. */
 const GROWTH = 2;
 
-/** Starting body length, in vertices. */
-const START_LEN = 4;
+/** Starting body length, in vertices. A single joint — you grow from nothing. */
+const START_LEN = 1;
 
 /**
  * Particle budget split. The cage has to stay visible or the snake is a worm in

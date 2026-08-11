@@ -114,7 +114,11 @@ export function turnsFrom(graph, from, at) {
   // Heading is the incoming direction carried through the joint, flattened —
   // "straight on" is where the snake was already going, not any fixed axis.
   const heading = tangent(v, graph.positions[from], n);
-  const right = new THREE.Vector3().crossVectors(n, heading);
+  // `heading × n`, not `n × heading`. Seen from outside the sphere the normal
+  // points at the viewer, so rotating the heading by +90° *about* it sweeps
+  // counter-clockwise — to the left. Crossing the other way is what actually
+  // lands on screen-right, and getting it backwards inverts every control.
+  const right = new THREE.Vector3().crossVectors(heading, n);
 
   return graph.neighbors[at]
     .filter((j) => j !== from)

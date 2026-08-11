@@ -299,11 +299,18 @@ dd { margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
   on purpose: a console that looked like a dev tool would read as pasted onto the
   scene, which is exactly how the cut physics toy failed.
 */
-.console-open {
+/* Both doors sit in one dock so neither has to know the other's width. */
+.console-dock {
   position: fixed;
   right: 1.25rem;
   bottom: 1.25rem;
   z-index: 4;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.console-open,
+.snake-open {
   padding: 0.35rem 0.6rem;
   font-family: inherit;
   font-size: 0.8rem;
@@ -317,9 +324,40 @@ dd { margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
 }
 
 .console-open:hover,
-.console-open:focus-visible {
+.console-open:focus-visible,
+.snake-open:hover,
+.snake-open:focus-visible {
   color: var(--green);
   border-color: var(--green);
+}
+
+/*
+ * The glyph slithers on hover. Cheap, and it does the job the label can't —
+ * `~~▸` means nothing until it moves, and then it's obvious.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .snake-open span[aria-hidden] {
+    display: inline-block;
+    transition: transform 0.2s;
+  }
+
+  .snake-open:hover span[aria-hidden],
+  .snake-open:focus-visible span[aria-hidden] {
+    animation: slither 0.9s ease-in-out infinite;
+  }
+}
+
+@keyframes slither {
+  0%,
+  100% {
+    transform: translateX(0) skewX(0deg);
+  }
+  25% {
+    transform: translateX(0.1em) skewX(-8deg);
+  }
+  75% {
+    transform: translateX(-0.1em) skewX(8deg);
+  }
 }
 
 /*

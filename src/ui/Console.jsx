@@ -331,16 +331,27 @@ export function Console() {
 
   return (
     <>
-      <button
-        ref={openerRef}
-        type="button"
-        className="console-open"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span aria-hidden="true">❯_</span>
-        <span className="sr-only">Open console</span>
-      </button>
+      {/*
+        Two doors, docked together. The console is the general one; snake gets
+        its own because it's the only thing here you'd come back for, and making
+        someone remember a command to reach it is a bad toll.
+      */}
+      <div className="console-dock">
+        <button type="button" className="snake-open" onClick={startSnake}>
+          <span aria-hidden="true">~~▸</span>
+          <span className="sr-only">Play snake</span>
+        </button>
+        <button
+          ref={openerRef}
+          type="button"
+          className="console-open"
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <span aria-hidden="true">❯_</span>
+          <span className="sr-only">Open console</span>
+        </button>
+      </div>
 
       {/*
         Only while the panel is shut, which is exactly when it's needed: the log
